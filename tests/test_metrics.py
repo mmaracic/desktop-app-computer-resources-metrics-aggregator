@@ -37,16 +37,16 @@ def test_all_metrics_output():
     assert json_output.startswith('{')
     assert json_output.endswith('}')
     
-    # Check for basic resource metrics using aliases
-    assert "Overall CPU utilization percentage across all processors - shows how much CPU capacity is currently being used" in sorted_metrics
-    assert "System RAM utilization percentage - indicates how much of the available memory is currently in use" in sorted_metrics
-    assert "Root filesystem disk usage percentage - shows how much of the system drive is occupied with data and applications" in sorted_metrics
+    # Check for basic resource metrics using aliases (short format, max 80 chars)
+    assert "Overall CPU utilization percentage" in sorted_metrics
+    assert "System RAM utilization percentage" in sorted_metrics
+    assert "Root filesystem disk usage percentage" in sorted_metrics
     
-    # Check for detailed resource metrics that should be present
-    assert "Current CPU operating frequency in megahertz - indicates the actual speed at which the processor is running" in sorted_metrics
-    assert "Available system memory in megabytes - shows how much RAM is currently free for new applications and processes" in sorted_metrics
-    assert "Total network bytes transmitted - cumulative count of data sent out through all network interfaces" in sorted_metrics
-    assert "Total network bytes received - cumulative count of data received through all network interfaces" in sorted_metrics
+    # Check for detailed resource metrics that should be present (short format)
+    assert "Current CPU operating frequency in MHz" in sorted_metrics
+    assert "Available system memory in MB" in sorted_metrics
+    assert "Total network bytes transmitted" in sorted_metrics
+    assert "Total network bytes received" in sorted_metrics
     
     # Check for temperature metrics using aliases
     temp_aliases = [alias for alias in sorted_metrics.keys() if "temperature" in alias.lower()]

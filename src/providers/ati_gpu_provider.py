@@ -27,7 +27,8 @@ class AtiGpuProvider(MetricProvider):
                 name=f"{card}_gpu_busy_percent",
                 metric_type=MetricType.FLOAT,
                 value=float(self._read_sysfs(path, "gpu_busy_percent")),
-                alias=f"GPU {card} utilization percentage - shows how much the GPU is actively processing graphics workloads",
+                alias=f"GPU {card} utilization percentage",
+                description=f"Shows how much the GPU is actively processing graphics workloads on card {card}",
                 component_type=ComponentType.GPU
             ))
             
@@ -41,7 +42,8 @@ class AtiGpuProvider(MetricProvider):
                     name=f"{card}_gtt_utilization_percent",
                     metric_type=MetricType.FLOAT,
                     value=float(gtt_used) / float(gtt_total) * 100.0,
-                    alias=f"GPU {card} shared graphics memory usage percentage - tracks usage of system RAM allocated for GPU operations",
+                    alias=f"GPU {card} shared graphics memory usage percentage",
+                    description=f"Tracks usage of system RAM allocated for GPU operations on card {card}",
                     component_type=ComponentType.GPU
                 ))
             
@@ -55,7 +57,8 @@ class AtiGpuProvider(MetricProvider):
                         name=f"{card}_gpu_clock_mhz",
                         metric_type=MetricType.INTEGER,
                         value=freq_mhz,
-                        alias=f"GPU {card} current clock frequency in megahertz - indicates the GPU's operating speed for graphics processing",
+                        alias=f"GPU {card} current clock frequency in MHz",
+                        description=f"Indicates the GPU's operating speed for graphics processing on card {card}",
                         component_type=ComponentType.GPU
                     ))
             except (ValueError, OSError):
@@ -71,7 +74,8 @@ class AtiGpuProvider(MetricProvider):
                         name=f"{card}_gpu_power_milliwatts",
                         metric_type=MetricType.INTEGER,
                         value=power_milliwatts,
-                        alias=f"GPU {card} current power consumption in milliwatts - shows how much electrical power the GPU is currently using",
+                        alias=f"GPU {card} current power consumption in mW",
+                        description=f"Shows how much electrical power the GPU is currently using on card {card}",
                         component_type=ComponentType.GPU
                     ))
             except (ValueError, OSError):
@@ -87,7 +91,8 @@ class AtiGpuProvider(MetricProvider):
                         name=f"{card}_gpu_memory_clock_mhz",
                         metric_type=MetricType.INTEGER,
                         value=mem_freq_mhz,
-                        alias=f"GPU {card} memory clock frequency in megahertz - indicates the speed of GPU video memory operations",
+                        alias=f"GPU {card} memory clock frequency in MHz",
+                        description=f"Indicates the speed of GPU video memory operations on card {card}",
                         component_type=ComponentType.GPU
                     ))
             except (ValueError, OSError):

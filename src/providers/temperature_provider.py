@@ -19,12 +19,14 @@ class TemperatureProvider(MetricProvider):
         sensors = psutil.sensors_temperatures()
         for name, temps in sensors.items():
             for temp in temps:
-                alias = self._get_alias(name)
+                alias = self._get_alias(name) or f"Temperature from {name}"
+                description = f"Temperature reading from {name} sensor"
                 metrics.append(Metric(
                     name=f"temperature_{name}",
                     metric_type=MetricType.FLOAT,
                     value=temp.current,
                     alias=alias,
+                    description=description,
                     component_type=self._get_component_type_for_sensor(name)
                 ))
         
@@ -32,12 +34,14 @@ class TemperatureProvider(MetricProvider):
         fans = psutil.sensors_fans()
         for name, fans_list in fans.items():
             for fan in fans_list:
-                alias = self._get_fan_alias(name)
+                alias = self._get_fan_alias(name) or f"Fan speed from {name}"
+                description = f"Fan speed reading from {name} sensor"
                 metrics.append(Metric(
                     name=f"fan_speed_{name}",
                     metric_type=MetricType.INTEGER,
                     value=fan.current,
                     alias=alias,
+                    description=description,
                     component_type=self._get_component_type_for_sensor(name.replace("fan_speed_", ""))
                 ))
                 

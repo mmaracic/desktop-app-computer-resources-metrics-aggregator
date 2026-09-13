@@ -1,8 +1,10 @@
 import pytest
-from src.providers.temperature_provider import TemperatureProvider
-from src.providers.resource_utilization_provider import ResourceUtilizationProvider
-from src.providers.ati_gpu_provider import AtiGpuProvider
+
 from src.metric.model.metric import Metric
+from src.providers.ati_gpu_provider import AtiGpuProvider
+from src.providers.resource_utilization_provider import ResourceUtilizationProvider
+from src.providers.temperature_provider import TemperatureProvider
+
 
 def test_temperature_provider_metrics():
     provider = TemperatureProvider()
@@ -20,12 +22,12 @@ def test_resource_utilization_provider_metrics():
     # Check that metrics have aliases using get_alias() method
     aliases = [m.get_alias() for m in metrics]
     
-    # Verify basic resource metrics exist with proper aliases
-    assert any("Overall CPU utilization percentage across all processors" in alias for alias in aliases)
+    # Verify basic resource metrics exist with proper aliases (short format, max 80 chars)
+    assert any("Overall CPU utilization percentage" in alias for alias in aliases)
     assert any("System RAM utilization percentage" in alias for alias in aliases)
     assert any("Root filesystem disk usage percentage" in alias for alias in aliases)
     
-    # Verify detailed metrics are present
+    # Verify detailed metrics are present (short format)
     assert any("Current CPU operating frequency" in alias for alias in aliases)
     assert any("Available system memory" in alias for alias in aliases)
     assert any("Total network bytes transmitted" in alias for alias in aliases)
