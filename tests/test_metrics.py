@@ -15,16 +15,16 @@ def test_all_metrics_output():
 
     # Collect all metrics with aliases as keys
     all_metrics = {}
-    
+
     # Update dictionary with metrics from each provider using aliases
     for metric in temp_provider.get_metrics():
-        all_metrics[metric.get_alias()] = metric._value
-        
+        all_metrics[metric.get_alias()] = metric.value
+
     for metric in resource_provider.get_metrics():
-        all_metrics[metric.get_alias()] = metric._value
-        
+        all_metrics[metric.get_alias()] = metric.value
+
     for metric in ati_gpu_provider.get_metrics():
-        all_metrics[metric.get_alias()] = metric._value
+        all_metrics[metric.get_alias()] = metric.value
 
     # Sort metrics alphabetically by key
     sorted_metrics = dict(sorted(all_metrics.items()))
@@ -32,27 +32,30 @@ def test_all_metrics_output():
     # Convert to JSON string
     json_output = json.dumps(sorted_metrics, indent=4)
     print(json_output)
-    
+
     # Assert that the output is a valid JSON string and contains expected aliases
-    assert json_output.startswith('{')
-    assert json_output.endswith('}')
-    
+    assert json_output.startswith("{")
+    assert json_output.endswith("}")
+
     # Check for basic resource metrics using aliases (short format, max 80 chars)
     assert "Overall CPU utilization percentage" in sorted_metrics
     assert "System RAM utilization percentage" in sorted_metrics
     assert "Root filesystem disk usage percentage" in sorted_metrics
-    
+
     # Check for detailed resource metrics that should be present (short format)
     assert "Current CPU operating frequency in MHz" in sorted_metrics
     assert "Available system memory in MB" in sorted_metrics
     assert "Total network bytes transmitted" in sorted_metrics
     assert "Total network bytes received" in sorted_metrics
-    
-    # Check for temperature metrics using aliases
-    temp_aliases = [alias for alias in sorted_metrics.keys() if "temperature" in alias.lower()]
-    assert len(temp_aliases) > 0, "Expected at least one temperature metric"
-    
-    # Check for fan speed metrics using aliases
-    fan_aliases = [alias for alias in sorted_metrics.keys() if "fan speed" in alias.lower()]
-    assert len(fan_aliases) > 0, "Expected at least one fan speed metric"
 
+    # Check for temperature metrics using aliases
+    temp_aliases = [
+        alias for alias in sorted_metrics.keys() if "temperature" in alias.lower()
+    ]
+    assert len(temp_aliases) > 0, "Expected at least one temperature metric"
+
+    # Check for fan speed metrics using aliases
+    fan_aliases = [
+        alias for alias in sorted_metrics.keys() if "fan speed" in alias.lower()
+    ]
+    assert len(fan_aliases) > 0, "Expected at least one fan speed metric"

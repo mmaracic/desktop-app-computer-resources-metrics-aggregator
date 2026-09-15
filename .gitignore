@@ -12,3 +12,6 @@ wheels/
 # Frontend
 **/node_modules/
 **/dist/
+
+# Metric files
+daily_metrics*.json

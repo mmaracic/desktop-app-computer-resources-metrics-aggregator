@@ -8,14 +8,25 @@ from threading import Semaphore
 
 import uvicorn
 import webview
-from fastapi import FastAPI
+from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.background import BackgroundTasks
 from fastapi.concurrency import asynccontextmanager
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from src.api import api
 from src.colored_log_formatter import ColoredLogFormatter
+from src.config.environment_config import EnvironmentConfig
 from src.dev_proxy import _dev_proxy
+from src.metric.metric_observer import MetricObserver
+from src.metric.metric_registry import MetricRegistry
+from src.observers.aggregation_observer import AggregationObserver
+from src.providers.ati_gpu_provider import AtiGpuProvider
+from src.providers.resource_utilization_provider import ResourceUtilizationProvider
+from src.providers.temperature_provider import TemperatureProvider
+from src.updaters.cosmos_database_updater import CosmosDatabaseUpdater
+from src.updaters.file_updater import FileUpdater
+from src.updaters.react_ui_updater import ReactUiUpdater
 
 log_handler = logging.StreamHandler()
 log_handler.setFormatter(
@@ -42,12 +53,71 @@ async def lifespan(app: FastAPI):
     Lifespan context manager for the FastAPI application.
     """
     logger.info("Starting FastAPI application...")
+    env_config = EnvironmentConfig()
+    app.state.env_config = env_config
+
+    cosmos_database_updater = CosmosDatabaseUpdater()
+    file_updater = FileUpdater(env_config.metric_filename)
+    react_ui_updater = ReactUiUpdater()
+    app.state.react_ui_updater = react_ui_updater
+
+    metric_registry = MetricRegistry()
+    metric_registry.register_metric_provider(AtiGpuProvider())
+    metric_registry.register_metric_provider(ResourceUtilizationProvider())
+    metric_registry.register_metric_provider(TemperatureProvider())
+
+    metric_registry.register_metric_observer(
+        AggregationObserver([cosmos_database_updater, file_updater, react_ui_updater])
+    )
+    app.state.metric_registry = metric_registry
+
+    stop_event = threading.Event()
+    metric_thread = threading.Thread(
+        target=lambda: asyncio.run(
+            fetch_metrics_periodically(metric_registry, env_config, stop_event)
+        ),
+        daemon=True,
+    )
+    metric_thread.start()
     yield
     logger.info("Shutting down FastAPI application...")
+    stop_event.set()
+    metric_thread.join(timeout=10)
+    metric_registry.unregister_all_providers_observers()
+    logger.info("FastAPI application shutdown complete")
+
+
+async def fetch_metrics_periodically(
+    metric_registry: MetricRegistry,
+    env_config: EnvironmentConfig,
+    stop_event: threading.Event,
+):
+    """Background task that fetches metrics at regular intervals, running in its own thread."""
+    logger.info("Starting background metric fetching task")
+    while not stop_event.is_set():
+        metric_registry.extract_metrics()
+        await asyncio.sleep(env_config.metric_refresh_interval)
 
 
 app = FastAPI(lifespan=lifespan)
 app.include_router(api.router, prefix="/api")
+
+
+@app.websocket("/websocket")
+async def websocket_endpoint(websocket: WebSocket):
+    """Handle WebSocket connections for real-time metric streaming.
+
+    The server sends metrics periodically from background tasks without waiting
+    for client messages. Background tasks automatically stop when the connection
+    closes or server shuts down.
+    """
+    await websocket.accept()
+    try:
+        # Just keep the connection alive, background task handles sending
+        while True:
+            await asyncio.sleep(1)
+    except WebSocketDisconnect:
+        logger.info("WebSocket client disconnected")
 
 
 async def _run_backend_server(

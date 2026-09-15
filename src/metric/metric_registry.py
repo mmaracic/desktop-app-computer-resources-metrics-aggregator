@@ -1,8 +1,10 @@
+import logging
+
 from src.metric.metric_observer import MetricObserver
 from src.metric.metric_provider import MetricProvider
 from src.metric.model.metric import Metric
 
-
+logger = logging.getLogger(__name__)
 class MetricRegistry:
     """
     A registry for managing metric providers and observers.
@@ -33,26 +35,21 @@ class MetricRegistry:
         """
         self._observers.append(observer)
 
-    def get_metrics(self) -> list[Metric]:
+    def unregister_all_providers_observers(self):
         """
-        Collect metrics from all registered providers.
+        Unregister all metric providers and observers.
+        """
+        self._metrics.clear()
+        self._observers.clear()
 
-        Returns:
-            list[Metric]: A list of all metrics collected from all providers.
+    def extract_metrics(self):
+        """
+        Collect metrics from all providers and notify all registered observers.
         """
         all_metrics: list[Metric] = []
         for provider in self._metrics:
             all_metrics.extend(provider.get_metrics())
-        return all_metrics
-
-    def notify_observers(self, metrics: list[Metric] | None = None):
-        """
-        Notify all registered observers with the provided metrics.
-
-        Args:
-            metrics: A list of Metric objects to pass to observers. 
-                     If None, no observers are notified.
-        """
-        if metrics is not None:
+        if len(all_metrics) != 0:
+            logger.info("Extracted %d metrics, sending to %d observers", len(all_metrics), len(self._observers))
             for observer in self._observers:
-                observer.update(metrics)
+                observer.update(all_metrics)
