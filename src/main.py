@@ -9,7 +9,6 @@ from threading import Semaphore
 import uvicorn
 import webview
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
-from fastapi.background import BackgroundTasks
 from fastapi.concurrency import asynccontextmanager
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
@@ -18,13 +17,11 @@ from src.api import api
 from src.colored_log_formatter import ColoredLogFormatter
 from src.config.environment_config import EnvironmentConfig
 from src.dev_proxy import _dev_proxy
-from src.metric.metric_observer import MetricObserver
 from src.metric.metric_registry import MetricRegistry
 from src.observers.aggregation_observer import AggregationObserver
 from src.providers.ati_gpu_provider import AtiGpuProvider
 from src.providers.resource_utilization_provider import ResourceUtilizationProvider
 from src.providers.temperature_provider import TemperatureProvider
-from src.updaters.cosmos_database_updater import CosmosDatabaseUpdater
 from src.updaters.file_updater import FileUpdater
 from src.updaters.react_ui_updater import ReactUiUpdater
 
@@ -56,7 +53,6 @@ async def lifespan(app: FastAPI):
     env_config = EnvironmentConfig()
     app.state.env_config = env_config
 
-    cosmos_database_updater = CosmosDatabaseUpdater()
     file_updater = FileUpdater(env_config.metric_filename)
     react_ui_updater = ReactUiUpdater()
     app.state.react_ui_updater = react_ui_updater
@@ -67,7 +63,7 @@ async def lifespan(app: FastAPI):
     metric_registry.register_metric_provider(TemperatureProvider())
 
     metric_registry.register_metric_observer(
-        AggregationObserver([cosmos_database_updater, file_updater, react_ui_updater])
+        AggregationObserver([file_updater, react_ui_updater])
     )
     app.state.metric_registry = metric_registry
 

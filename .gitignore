@@ -13,5 +13,12 @@ wheels/
 **/node_modules/
 **/dist/
 
+# Environment files
+.env
+.env.local
+
 # Metric files
 daily_metrics*.json
+
+# Desktop shortcuts
+*.desktop

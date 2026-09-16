@@ -16,7 +16,17 @@ class EnvironmentConfig(BaseSettings):
     metric_refresh_interval: int = 5  # Interval in seconds to refresh metrics
     metric_filename: str = "daily_metrics.json"  # Filename for storing daily metrics
 
-    model_config = SettingsConfigDict(case_sensitive=True)
+    azure_usage_enabled: bool = False  # Flag to enable or disable Azure usage
+    azure_blob_container_name: str = "metrics" # Name of the Azure Blob Storage container
+    azure_blob_connection_string: str  # Connection string for Azure Blob Storage
+
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        env_nested_delimiter="__",
+        nested_model_default_partial_update=True,
+        extra="ignore",
+    )
 
     @classmethod
     def settings_customise_sources(
