@@ -9,9 +9,9 @@ from src.updaters.model.stored_metrics import StoredMetrics
 
 
 class FileUpdater(MetricUpdater):
-    def __init__(self, file_name: str, base_path: str = "."):
+    def __init__(self, file_name: str, storage: DiskTextFileStorage):
         self.file_name = file_name
-        self.storage = DiskTextFileStorage(base_path)
+        self.storage = storage
 
     def update(self, metrics: list[Metric]):
         # Build filename from class filename, current folder, and current date

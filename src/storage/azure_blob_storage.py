@@ -1,5 +1,6 @@
 """Azure Blob Storage repository implementation."""
 
+from datetime import datetime
 from enum import Enum
 
 from azure.core.exceptions import ResourceExistsError
@@ -24,6 +25,7 @@ class RepoBlob(BaseModel):
     size: int
     data: bytes | None = None
     tier: StorageTier = StorageTier.HOT
+    created_at: datetime | None = None
 
 
 class AzureBlobStorage:
@@ -84,7 +86,7 @@ class AzureBlobStorage:
         container_client = self.blob_service_client.get_container_client(container_name)
         blobs = container_client.list_blobs()
         return [
-            RepoBlob(name=blob.name, container=container_name, size=blob.size)
+            RepoBlob(name=blob.name, container=container_name, size=blob.size, created_at=blob.creation_time)
             for blob in blobs
         ]
 

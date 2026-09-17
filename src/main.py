@@ -22,6 +22,9 @@ from src.observers.aggregation_observer import AggregationObserver
 from src.providers.ati_gpu_provider import AtiGpuProvider
 from src.providers.resource_utilization_provider import ResourceUtilizationProvider
 from src.providers.temperature_provider import TemperatureProvider
+from src.storage.azure_blob_storage import AzureBlobStorage
+from src.storage.disk_text_file_storage import DiskTextFileStorage
+from src.storage.storage_service import StorageService
 from src.updaters.file_updater import FileUpdater
 from src.updaters.react_ui_updater import ReactUiUpdater
 
@@ -53,7 +56,8 @@ async def lifespan(app: FastAPI):
     env_config = EnvironmentConfig()
     app.state.env_config = env_config
 
-    file_updater = FileUpdater(env_config.metric_filename)
+    disk_storage = DiskTextFileStorage(base_path=".")
+    file_updater = FileUpdater(env_config.metric_filename, disk_storage)
     react_ui_updater = ReactUiUpdater()
     app.state.react_ui_updater = react_ui_updater
 
@@ -66,6 +70,22 @@ async def lifespan(app: FastAPI):
         AggregationObserver([file_updater, react_ui_updater])
     )
     app.state.metric_registry = metric_registry
+
+    if env_config.azure_usage_enabled:
+        azure_storage = AzureBlobStorage(
+            connection_string=env_config.azure_blob_connection_string
+        )
+        storage_service = StorageService(
+            azure_storage=azure_storage,
+            disk_storage=disk_storage,
+            base_file_name=env_config.metric_filename,
+        )
+        storage_service.upload_local_files_to_azure(
+            env_config.azure_blob_container_name
+        )
+        storage_service.change_tier_of_blobs_in_azure(
+            env_config.azure_blob_container_name
+        )
 
     stop_event = threading.Event()
     metric_thread = threading.Thread(
