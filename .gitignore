@@ -20,5 +20,8 @@ wheels/
 # Metric files
 daily_metrics*.json
 
+# Log files
+application*.log
+
 # Desktop shortcuts
 *.desktop

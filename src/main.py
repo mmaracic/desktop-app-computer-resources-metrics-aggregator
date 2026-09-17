@@ -3,7 +3,10 @@
 import argparse
 import asyncio
 import logging
+import logging.handlers
 import threading
+from datetime import datetime
+from pathlib import Path
 from threading import Semaphore
 
 import uvicorn
@@ -28,15 +31,72 @@ from src.storage.storage_service import StorageService
 from src.updaters.file_updater import FileUpdater
 from src.updaters.react_ui_updater import ReactUiUpdater
 
-log_handler = logging.StreamHandler()
-log_handler.setFormatter(
-    ColoredLogFormatter(
+
+def setup_logging(
+    log_to_file: bool = False, log_level: int = logging.INFO
+) -> logging.Logger:
+    """Configure logging based on the log_to_file and log_level parameters.
+
+    Called twice: once for the console handler and once for the file handler in the main application if enabled.
+
+    Args:
+        log_to_file: If True, logs will be written to a file in addition to console.
+                    If False, logs will only go to console.
+        log_level: The minimum level of messages that will be logged.
+
+    Returns:
+        The root logger instance.
+    """
+    # Create formatter
+    formatter = ColoredLogFormatter(
         fmt="%(asctime)s %(levelname)s %(threadName)s %(name)s %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
-)
-logging.basicConfig(level=logging.INFO, handlers=[log_handler])
-logger = logging.getLogger(__name__)
+
+    # Console handler (always enabled)
+    console_handler = logging.StreamHandler()
+    console_handler.setFormatter(formatter)
+    console_handler.setLevel(log_level)
+
+    # File handler (only if log_to_file is True)
+    file_handler = None
+    if log_to_file:
+        # Get the directory of this script for log file location
+        script_dir = Path(__file__).parent.parent.resolve()
+        
+        # Create timestamped log file name (YYYY-MM-DD_HH-MM-SS format)
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        log_file = script_dir / f"application_{timestamp}.log"
+        
+        # Create rotating file handler to prevent unbounded growth
+        max_bytes = 10 * 1024 * 1024  # 10 MB
+        backup_count = 5
+        file_handler = logging.handlers.RotatingFileHandler(
+            log_file, maxBytes=max_bytes, backupCount=backup_count, encoding="utf-8"
+        )
+        file_handler.setFormatter(formatter)
+        file_handler.setLevel(log_level)
+
+    # Configure root logger
+    root_logger = logging.getLogger()
+    root_logger.setLevel(log_level)
+
+    # Clear any existing handlers to avoid duplicates
+    root_logger.handlers.clear()
+
+    # Add handlers
+    root_logger.addHandler(console_handler)
+    if file_handler:
+        root_logger.addHandler(file_handler)
+
+    logger = logging.getLogger(__name__)
+    return logger
+
+
+# Setup logging at module level (can be reconfigured per run)
+logger = setup_logging(
+    log_to_file=False, log_level=logging.INFO
+)  # Default to console only
 
 
 class Config(BaseModel):
@@ -45,6 +105,7 @@ class Config(BaseModel):
     host: str = "127.0.0.1"
     port: int = 5000
     dev: bool = False
+    log_to_file: bool = False
 
 
 @asynccontextmanager
@@ -176,13 +237,23 @@ def parse_args() -> Config:
         action="store_true",
         help="Run in development mode, pointing the webview at the Vite dev server",
     )
+    parser.add_argument(
+        "--log-to-file",
+        action="store_true",
+        help="Enable logging to application.log file (in addition to console)",
+    )
     args = parser.parse_args()
-    return Config(host=args.host, port=args.port, dev=args.dev)
+    return Config(
+        host=args.host, port=args.port, dev=args.dev, log_to_file=args.log_to_file
+    )
 
 
 def main() -> None:
     """Main entry point for the application."""
     config = parse_args()
+
+    # Setup logging based on configuration
+    logger = setup_logging(log_to_file=config.log_to_file)
 
     if not config.dev:
         app.mount("/", StaticFiles(directory="react/dist", html=True))
