@@ -1,0 +1,11 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Computer Resources Metrics Aggregator
+Comment=Desktop application for monitoring computer resources metrics
+Path=<projects_parent_folder>/desktop-app-computer-resources-metrics-aggregator
+Exec=/usr/bin/env uv run -m src.main --log-to-file
+Icon=utilities-system-monitor
+Terminal=false
+StartupNotify=false
+Categories=Utility;Monitoring;System;
