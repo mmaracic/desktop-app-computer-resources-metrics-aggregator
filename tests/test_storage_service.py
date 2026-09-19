@@ -4,6 +4,8 @@ from datetime import UTC, datetime
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 from src.storage.azure_blob_storage import AzureBlobStorage, RepoBlob, StorageTier
 from src.storage.disk_text_file_storage import DiskTextFileStorage
 from src.storage.storage_service import StorageService
@@ -13,27 +15,28 @@ class MockAzureStorage(AzureBlobStorage):
     """Mock Azure Blob Storage for testing purposes."""
 
     def __init__(self) -> None:
+        """Initialize the mock Azure storage without connecting to actual Azure."""
         # Don't call parent __init__ to avoid actual Azure connection
         self.connection_string = "mock_connection_string"
         self.blob_service_client = None
-        self.uploaded_files = []
-        self.uploaded_content = {}
-        self.list_files_result = []
-        self.container_blobs_result = []
-        self.blob_tiers = {}
-        self.tier_changes = []
+        self.uploaded_files: list[str] = []
+        self.uploaded_content: dict[str, bytes] = {}
+        self.list_files_result: list[str] = []
+        self.container_blobs_result: list[RepoBlob] = []
+        self.blob_tiers: dict[str, StorageTier] = {}
+        self.tier_changes: list[tuple[str, StorageTier]] = []
 
     def upload_blob(self, blob: RepoBlob, overwrite: bool = True) -> bool:
         """Mock upload_blob method that records uploaded files."""
         self.uploaded_files.append(blob.name)
-        self.uploaded_content[blob.name] = blob.data
+        self.uploaded_content[blob.name] = blob.data or b""
         return True
 
     def list_files(self) -> list[str]:
         """Mock list_files method that returns pre-defined results."""
         return self.list_files_result
 
-    def get_container_blobs(self, container_name: str) -> list[RepoBlob]:
+    def get_container_blobs(self, container_name: str) -> list[RepoBlob]:  # noqa: ARG002
         """Mock get_container_blobs method that returns pre-defined results."""
         return self.container_blobs_result
 
@@ -102,7 +105,8 @@ def test_upload_skips_todays_file(mock_datetime: MagicMock, tmp_path: Path) -> N
 
 @patch("src.storage.storage_service.datetime")
 def test_upload_skips_todays_file_when_exists_in_azure(
-    mock_datetime: MagicMock, tmp_path: Path,
+    mock_datetime: MagicMock,
+    tmp_path: Path,
 ) -> None:
     """Test that today's file is skipped when it already exists in Azure."""
     # Setup mock datetime
@@ -133,7 +137,8 @@ def test_upload_skips_todays_file_when_exists_in_azure(
 
 @patch("src.storage.storage_service.datetime")
 def test_upload_handles_empty_file_list(
-    mock_datetime: MagicMock, tmp_path: Path,
+    mock_datetime: MagicMock,
+    tmp_path: Path,
 ) -> None:
     """Test that upload handles empty file list gracefully."""
     # Setup mock datetime
@@ -228,7 +233,9 @@ def test_upload_does_not_reupload_existing_azure_files(
     disk_storage = _build_mock_disk_storage(tmp_path)
 
     # Simulate that other_file.json already exists in Azure
-    azure_storage.list_files_result = ["other_file.json"]
+    azure_storage.container_blobs_result = [
+        RepoBlob(name="other_file.json", container="test", size=0, data=b"")
+    ]
 
     service = StorageService(azure_storage, disk_storage, "daily_metrics")
     service.upload_local_files_to_azure("test-container")
