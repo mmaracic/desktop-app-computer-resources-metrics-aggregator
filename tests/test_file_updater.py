@@ -7,37 +7,46 @@ from unittest.mock import patch
 
 from src.metric.model.component_type import ComponentType
 from src.metric.model.metric import Metric
+from src.metric.model.metric_metadata import MetricMetadata
 from src.metric.model.metric_type import MetricType
 from src.storage.disk_text_file_storage import DiskTextFileStorage
-from src.updaters.file_updater import FileUpdater
+from src.updaters.file_updater import FileUpdater, MetricsInTime
 
 
 def _build_metric(name: str, value: float) -> Metric:
     """Build a Metric instance with the given name and value for test purposes."""
     return Metric(
         name=name,
-        metric_type=MetricType.FLOAT,
         value=value,
-        alias=name,
-        description=name,
-        component_type=ComponentType.CPU,
+        metadata=MetricMetadata(
+            metric_type=MetricType.FLOAT,
+            alias=name,
+            description=name,
+            component_type=ComponentType.CPU,
+        ),
     )
 
 
-def test_update_appends_multiple_updates_to_same_file(tmp_path: Path):
+def test_update_appends_multiple_updates_to_same_file(tmp_path: Path) -> None:
     file_name = str(tmp_path / "metrics")
-    disk_storage = DiskTextFileStorage(tmp_path)
+    disk_storage = DiskTextFileStorage(str(tmp_path))
     updater = FileUpdater(file_name, disk_storage)
     fixed_now = datetime(2026, 9, 16, 12, 0, 0, tzinfo=UTC)
 
-    with patch("src.updaters.file_updater.datetime") as mock_datetime:
-        mock_datetime.now.return_value = fixed_now
-        updater.update([_build_metric("cpu_usage_percent", 10.0)])
-        updater.update([_build_metric("cpu_usage_percent", 20.0)])
+    updater.update(
+        MetricsInTime(
+            metrics=[_build_metric("cpu_usage_percent", 10.0)],
+            stored_at=fixed_now,
+        ),
+    )
+    updater.update(
+        MetricsInTime(
+            metrics=[_build_metric("cpu_usage_percent", 20.0)],
+            stored_at=fixed_now,
+        ),
+    )
 
-    mock_datetime.now.assert_called_with(UTC)
-
-    output_file = tmp_path / "metrics_20260916.json"
+    output_file = tmp_path / f"metrics_{fixed_now.strftime('%Y%m%d')}.json"
     assert output_file.exists()
 
     lines = output_file.read_text().splitlines()
@@ -56,20 +65,35 @@ def test_update_appends_multiple_updates_to_same_file(tmp_path: Path):
     }
 
 
-def test_update_uses_separate_file_per_day(tmp_path: Path):
+def test_update_uses_separate_file_per_day(tmp_path: Path) -> None:
     file_name = str(tmp_path / "metrics")
-    disk_storage = DiskTextFileStorage(tmp_path)
+    disk_storage = DiskTextFileStorage(str(tmp_path))
     updater = FileUpdater(file_name, disk_storage)
+    fixed_now = datetime(2026, 9, 16, 12, 0, 0, tzinfo=UTC)
 
-    with patch("src.updaters.file_updater.datetime") as mock_datetime:
-        mock_datetime.now.return_value = datetime(2026, 9, 16, 12, 0, 0, tzinfo=UTC)
-        updater.update([_build_metric("cpu_usage_percent", 10.0)])
+    updater.update(
+        MetricsInTime(
+            metrics=[_build_metric("cpu_usage_percent", 10.0)],
+            stored_at=fixed_now,
+        ),
+    )
 
-        mock_datetime.now.return_value = datetime(2026, 9, 17, 0, 0, 0, tzinfo=UTC)
-        updater.update([_build_metric("cpu_usage_percent", 20.0)])
+    fixed_now = datetime(2026, 9, 17, 0, 0, 0, tzinfo=UTC)
+    updater.update(
+        MetricsInTime(
+            metrics=[_build_metric("cpu_usage_percent", 20.0)],
+            stored_at=fixed_now,
+        ),
+    )
 
-    day_one_file = tmp_path / "metrics_20260916.json"
-    day_two_file = tmp_path / "metrics_20260917.json"
+    day_one_file = (
+        tmp_path
+        / f"metrics_{datetime(2026, 9, 16, tzinfo=UTC).strftime('%Y%m%d')}.json"
+    )
+    day_two_file = (
+        tmp_path
+        / f"metrics_{datetime(2026, 9, 17, tzinfo=UTC).strftime('%Y%m%d')}.json"
+    )
     assert day_one_file.exists()
     assert day_two_file.exists()
     assert len(day_one_file.read_text().splitlines()) == 1

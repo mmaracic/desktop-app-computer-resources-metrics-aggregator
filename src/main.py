@@ -5,7 +5,8 @@ import asyncio
 import logging
 import logging.handlers
 import threading
-from datetime import datetime
+from collections.abc import AsyncGenerator
+from datetime import UTC, datetime
 from pathlib import Path
 from threading import Semaphore
 
@@ -19,8 +20,10 @@ from pydantic import BaseModel
 from src.api import api
 from src.colored_log_formatter import ColoredLogFormatter
 from src.config.environment_config import EnvironmentConfig
+from src.config.metadata_reader import MetadataReader
 from src.dev_proxy import _dev_proxy
 from src.metric.metric_registry import MetricRegistry
+from src.metric.model.metric_metadata import MetricMetadata
 from src.observers.aggregation_observer import AggregationObserver
 from src.providers.ati_gpu_provider import AtiGpuProvider
 from src.providers.resource_utilization_provider import ResourceUtilizationProvider
@@ -33,7 +36,8 @@ from src.updaters.react_ui_updater import ReactUiUpdater
 
 
 def setup_logging(
-    log_to_file: bool = False, log_level: int = logging.INFO
+    log_to_file: bool = False,
+    log_level: int = logging.INFO,
 ) -> logging.Logger:
     """Configure logging based on the log_to_file and log_level parameters.
 
@@ -46,6 +50,7 @@ def setup_logging(
 
     Returns:
         The root logger instance.
+
     """
     # Create formatter
     formatter = ColoredLogFormatter(
@@ -63,11 +68,11 @@ def setup_logging(
     if log_to_file:
         # Get the directory of this script for log file location
         script_dir = Path(__file__).parent.parent.resolve()
-        
+
         # Create timestamped log file name (YYYY-MM-DD_HH-MM-SS format)
-        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        timestamp = datetime.now(UTC).strftime("%Y-%m-%d_%H-%M-%S")
         log_file = script_dir / f"application_{timestamp}.log"
-        
+
         # Create rotating file handler to prevent unbounded growth
         max_bytes = 10 * 1024 * 1024  # 10 MB
         backup_count = 5
@@ -89,8 +94,7 @@ def setup_logging(
     if file_handler:
         root_logger.addHandler(file_handler)
 
-    logger = logging.getLogger(__name__)
-    return logger
+    return logging.getLogger(__name__)
 
 
 # Setup logging at module level (can be reconfigured per run)
@@ -109,20 +113,23 @@ class Config(BaseModel):
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI):
-    """
-    Lifespan context manager for the FastAPI application.
-    """
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    """Lifespan context manager for the FastAPI application."""
     logger.info("Starting FastAPI application...")
     env_config = EnvironmentConfig()
     app.state.env_config = env_config
+
+    metadata_map: dict[str, MetricMetadata] = {}
+    metadata_map.update(MetadataReader(file_path="metadata/temperature_metadata.json").read())
+    metadata_map.update(MetadataReader(file_path="metadata/fan_metadata.json").read())
+    metadata_map.update(MetadataReader(file_path="metadata/metric_metadata.json").read())
 
     disk_storage = DiskTextFileStorage(base_path=".")
     file_updater = FileUpdater(env_config.metric_filename, disk_storage)
     react_ui_updater = ReactUiUpdater()
     app.state.react_ui_updater = react_ui_updater
 
-    metric_registry = MetricRegistry()
+    metric_registry = MetricRegistry(metadata_map)
     metric_registry.register_metric_provider(AtiGpuProvider())
     metric_registry.register_metric_provider(ResourceUtilizationProvider())
     metric_registry.register_metric_provider(TemperatureProvider())
@@ -168,7 +175,7 @@ async def fetch_metrics_periodically(
     metric_registry: MetricRegistry,
     env_config: EnvironmentConfig,
     stop_event: threading.Event,
-):
+) -> None:
     """Background task that fetches metrics at regular intervals, running in its own thread."""
     logger.info("Starting background metric fetching task")
     while not stop_event.is_set():
@@ -181,7 +188,7 @@ app.include_router(api.router, prefix="/api")
 
 
 @app.websocket("/websocket")
-async def websocket_endpoint(websocket: WebSocket):
+async def websocket_endpoint(websocket: WebSocket) -> None:
     """Handle WebSocket connections for real-time metric streaming.
 
     The server sends metrics periodically from background tasks without waiting

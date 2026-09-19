@@ -12,7 +12,7 @@ from src.storage.storage_service import StorageService
 class MockAzureStorage(AzureBlobStorage):
     """Mock Azure Blob Storage for testing purposes."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         # Don't call parent __init__ to avoid actual Azure connection
         self.connection_string = "mock_connection_string"
         self.blob_service_client = None
@@ -66,10 +66,10 @@ def _get_today_timestamp() -> str:
 
 
 @patch("src.storage.storage_service.datetime")
-def test_upload_skips_todays_file(mock_datetime: MagicMock, tmp_path: Path):
+def test_upload_skips_todays_file(mock_datetime: MagicMock, tmp_path: Path) -> None:
     """Test that today's file is skipped during upload to avoid redundant uploads."""
     # Setup mock datetime
-    fixed_date = datetime(2026, 9, 17, 12, 0, 0)
+    fixed_date = datetime(2026, 9, 17, 12, 0, 0, tzinfo=UTC)
     mock_datetime.now.return_value = fixed_date
 
     # Create mock storages
@@ -103,10 +103,10 @@ def test_upload_skips_todays_file(mock_datetime: MagicMock, tmp_path: Path):
 @patch("src.storage.storage_service.datetime")
 def test_upload_skips_todays_file_when_exists_in_azure(
     mock_datetime: MagicMock, tmp_path: Path
-):
+) -> None:
     """Test that today's file is skipped when it already exists in Azure."""
     # Setup mock datetime
-    fixed_date = datetime(2026, 9, 17, 12, 0, 0)
+    fixed_date = datetime(2026, 9, 17, 12, 0, 0, tzinfo=UTC)
     mock_datetime.now.return_value = fixed_date
 
     # Create mock storages
@@ -132,10 +132,12 @@ def test_upload_skips_todays_file_when_exists_in_azure(
 
 
 @patch("src.storage.storage_service.datetime")
-def test_upload_handles_empty_file_list(mock_datetime: MagicMock, tmp_path: Path):
+def test_upload_handles_empty_file_list(
+    mock_datetime: MagicMock, tmp_path: Path
+) -> None:
     """Test that upload handles empty file list gracefully."""
     # Setup mock datetime
-    fixed_date = datetime(2026, 9, 17, 12, 0, 0)
+    fixed_date = datetime(2026, 9, 17, 12, 0, 0, tzinfo=UTC)
     mock_datetime.now.return_value = fixed_date
 
     # Create mock storages with empty disk storage
@@ -157,10 +159,10 @@ def test_upload_handles_empty_file_list(mock_datetime: MagicMock, tmp_path: Path
 
 
 @patch("src.storage.storage_service.datetime")
-def test_upload_skips_empty_filenames(mock_datetime: MagicMock, tmp_path: Path):
+def test_upload_skips_empty_filenames(mock_datetime: MagicMock, tmp_path: Path) -> None:
     """Test that empty filenames are skipped during upload."""
     # Setup mock datetime
-    fixed_date = datetime(2026, 9, 17, 12, 0, 0)
+    fixed_date = datetime(2026, 9, 17, 12, 0, 0, tzinfo=UTC)
     mock_datetime.now.return_value = fixed_date
 
     # Create mock storages
@@ -181,11 +183,12 @@ def test_upload_skips_empty_filenames(mock_datetime: MagicMock, tmp_path: Path):
 
 @patch("src.storage.storage_service.datetime")
 def test_upload_pattern_matching_with_special_characters(
-    mock_datetime: MagicMock, tmp_path: Path
-):
+    mock_datetime: MagicMock,
+    tmp_path: Path,
+) -> None:
     """Test that filename pattern matching works with special characters."""
     # Setup mock datetime
-    fixed_date = datetime(2026, 9, 17, 12, 0, 0)
+    fixed_date = datetime(2026, 9, 17, 12, 0, 0, tzinfo=UTC)
     mock_datetime.now.return_value = fixed_date
 
     # Create mock storages with filename containing special characters
@@ -214,10 +217,11 @@ def test_upload_pattern_matching_with_special_characters(
 
 @patch("src.storage.storage_service.datetime")
 def test_upload_does_not_reupload_existing_azure_files(
-    mock_datetime: MagicMock, tmp_path: Path
-):
+    mock_datetime: MagicMock,
+    tmp_path: Path,
+) -> None:
     """Test that files already present in Azure are not re-uploaded."""
-    fixed_date = datetime(2026, 9, 17, 12, 0, 0)
+    fixed_date = datetime(2026, 9, 17, 12, 0, 0, tzinfo=UTC)
     mock_datetime.now.return_value = fixed_date
 
     azure_storage = MockAzureStorage()
@@ -235,14 +239,18 @@ def test_upload_does_not_reupload_existing_azure_files(
 
 def _make_blob(name: str, created_at: datetime) -> RepoBlob:
     return RepoBlob(
-        name=name, container="test-container", size=10, created_at=created_at
+        name=name,
+        container="test-container",
+        size=10,
+        created_at=created_at,
     )
 
 
 @patch("src.storage.storage_service.datetime")
 def test_change_tier_moves_old_hot_blob_to_cold(
-    mock_datetime: MagicMock, tmp_path: Path
-):
+    mock_datetime: MagicMock,
+    tmp_path: Path,
+) -> None:
     """Test that a Hot blob older than 7 days is moved to Cold tier."""
     fixed_date = datetime(2026, 9, 17, 12, 0, 0, tzinfo=UTC)
     mock_datetime.now.return_value = fixed_date
@@ -261,7 +269,10 @@ def test_change_tier_moves_old_hot_blob_to_cold(
 
 
 @patch("src.storage.storage_service.datetime")
-def test_change_tier_keeps_recent_hot_blob(mock_datetime: MagicMock, tmp_path: Path):
+def test_change_tier_keeps_recent_hot_blob(
+    mock_datetime: MagicMock,
+    tmp_path: Path,
+) -> None:
     """Test that a Hot blob newer than 7 days is left unchanged."""
     fixed_date = datetime(2026, 9, 17, 12, 0, 0, tzinfo=UTC)
     mock_datetime.now.return_value = fixed_date
@@ -281,8 +292,9 @@ def test_change_tier_keeps_recent_hot_blob(mock_datetime: MagicMock, tmp_path: P
 
 @patch("src.storage.storage_service.datetime")
 def test_change_tier_keeps_cold_blob_unchanged(
-    mock_datetime: MagicMock, tmp_path: Path
-):
+    mock_datetime: MagicMock,
+    tmp_path: Path,
+) -> None:
     """Test that a Cold blob is left unchanged regardless of age."""
     fixed_date = datetime(2026, 9, 17, 12, 0, 0, tzinfo=UTC)
     mock_datetime.now.return_value = fixed_date
@@ -302,8 +314,9 @@ def test_change_tier_keeps_cold_blob_unchanged(
 
 @patch("src.storage.storage_service.datetime")
 def test_change_tier_raises_for_disallowed_tier(
-    mock_datetime: MagicMock, tmp_path: Path
-):
+    mock_datetime: MagicMock,
+    tmp_path: Path,
+) -> None:
     """Test that a blob in a tier other than Hot or Cold raises ValueError."""
     fixed_date = datetime(2026, 9, 17, 12, 0, 0, tzinfo=UTC)
     mock_datetime.now.return_value = fixed_date
@@ -324,7 +337,10 @@ def test_change_tier_raises_for_disallowed_tier(
 
 
 @patch("src.storage.storage_service.datetime")
-def test_change_tier_handles_no_blobs(mock_datetime: MagicMock, tmp_path: Path):
+def test_change_tier_handles_no_blobs(
+    mock_datetime: MagicMock,
+    tmp_path: Path,
+) -> None:
     """Test that an empty container blob list does not raise or change anything."""
     fixed_date = datetime(2026, 9, 17, 12, 0, 0, tzinfo=UTC)
     mock_datetime.now.return_value = fixed_date

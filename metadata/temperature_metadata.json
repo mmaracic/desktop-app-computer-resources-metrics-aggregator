@@ -1,0 +1,298 @@
+{
+    "temperature_acpitz": {
+        "metric_type": "FLOAT",
+        "alias": "System temperature",
+        "description": "Overall motherboard temperature reading",
+        "component_type": "MOTHERBOARD",
+        "warning_threshold": 60.0,
+        "critical_threshold": 75.0
+    },
+    "temperature_k10temp": {
+        "metric_type": "FLOAT",
+        "alias": "AMD CPU temperature",
+        "description": "Core temperature of AMD processor",
+        "component_type": "CPU",
+        "warning_threshold": 70.0,
+        "critical_threshold": 85.0
+    },
+    "temperature_coretemp": {
+        "metric_type": "FLOAT",
+        "alias": "Intel CPU temperature",
+        "description": "Core temperature of Intel processor",
+        "component_type": "CPU",
+        "warning_threshold": 70.0,
+        "critical_threshold": 85.0
+    },
+    "temperature_nvme": {
+        "metric_type": "FLOAT",
+        "alias": "NVMe SSD temperature",
+        "description": "Drive temperature of NVMe solid-state drive",
+        "component_type": "DISK",
+        "warning_threshold": 50.0,
+        "critical_threshold": 70.0
+    },
+    "temperature_intel_rapl_msr": {
+        "metric_type": "FLOAT",
+        "alias": "Intel RAPL temperature",
+        "description": "Power/thermal management temperature for Intel CPUs",
+        "component_type": "CPU",
+        "warning_threshold": 70.0,
+        "critical_threshold": 85.0
+    },
+    "temperature_amdgpu": {
+        "metric_type": "FLOAT",
+        "alias": "AMD GPU temperature",
+        "description": "Junction temperature of AMD graphics card",
+        "component_type": "GPU",
+        "warning_threshold": 80.0,
+        "critical_threshold": 95.0
+    },
+    "temperature_nvidia": {
+        "metric_type": "FLOAT",
+        "alias": "NVIDIA GPU temperature",
+        "description": "Temperature of NVIDIA graphics card",
+        "component_type": "GPU",
+        "warning_threshold": 80.0,
+        "critical_threshold": 95.0
+    },
+    "temperature_wmi_alsi": {
+        "metric_type": "FLOAT",
+        "alias": "Motherboard sensor temperature",
+        "description": "Additional motherboard thermal sensor",
+        "component_type": "MOTHERBOARD",
+        "warning_threshold": 60.0,
+        "critical_threshold": 75.0
+    },
+    "temperature_ecore": {
+        "metric_type": "FLOAT",
+        "alias": "Embedded controller temperature",
+        "description": "System management temperature reading",
+        "component_type": "MOTHERBOARD",
+        "warning_threshold": 60.0,
+        "critical_threshold": 75.0
+    },
+    "temperature_kvmhost": {
+        "metric_type": "FLOAT",
+        "alias": "KVM host temperature",
+        "description": "Virtualization host thermal sensor",
+        "component_type": "MOTHERBOARD",
+        "warning_threshold": 60.0,
+        "critical_threshold": 75.0
+    },
+    "temperature_asus_ec": {
+        "metric_type": "FLOAT",
+        "alias": "ASUS EC temperature",
+        "description": "ASUS Embedded Controller thermal reading",
+        "component_type": "MOTHERBOARD",
+        "warning_threshold": 60.0,
+        "critical_threshold": 75.0
+    },
+    "temperature_fhwmon": {
+        "metric_type": "FLOAT",
+        "alias": "Fan hardware monitor temperature",
+        "description": "Fan controller thermal sensor",
+        "component_type": "MOTHERBOARD",
+        "warning_threshold": 60.0,
+        "critical_threshold": 75.0
+    },
+    "temperature_nct6775": {
+        "metric_type": "FLOAT",
+        "alias": "NCT6775 chip temperature",
+        "description": "Winbond super I/O temperature sensor",
+        "component_type": "MOTHERBOARD",
+        "warning_threshold": 60.0,
+        "critical_threshold": 75.0
+    },
+    "temperature_it87": {
+        "metric_type": "FLOAT",
+        "alias": "IT87 chip temperature",
+        "description": "Vitessa super I/O temperature sensor",
+        "component_type": "MOTHERBOARD",
+        "warning_threshold": 60.0,
+        "critical_threshold": 75.0
+    },
+    "temperature_dell_smm": {
+        "metric_type": "FLOAT",
+        "alias": "Dell SMM temperature",
+        "description": "Dell System Management Mode thermal reading",
+        "component_type": "MOTHERBOARD",
+        "warning_threshold": 60.0,
+        "critical_threshold": 75.0
+    },
+    "temperature_ibm_sensor": {
+        "metric_type": "FLOAT",
+        "alias": "IBM sensor temperature",
+        "description": "IBM system thermal sensor",
+        "component_type": "MOTHERBOARD",
+        "warning_threshold": 60.0,
+        "critical_threshold": 75.0
+    },
+    "temperature_pcieport0": {
+        "metric_type": "FLOAT",
+        "alias": "PCIe port 0 temperature",
+        "description": "Temperature at PCIe bus port 0",
+        "component_type": "MOTHERBOARD",
+        "warning_threshold": 55.0,
+        "critical_threshold": 70.0
+    },
+    "temperature_pcieport1": {
+        "metric_type": "FLOAT",
+        "alias": "PCIe port 1 temperature",
+        "description": "Temperature at PCIe bus port 1",
+        "component_type": "MOTHERBOARD",
+        "warning_threshold": 55.0,
+        "critical_threshold": 70.0
+    },
+    "temperature_pcieport2": {
+        "metric_type": "FLOAT",
+        "alias": "PCIe port 2 temperature",
+        "description": "Temperature at PCIe bus port 2",
+        "component_type": "MOTHERBOARD",
+        "warning_threshold": 55.0,
+        "critical_threshold": 70.0
+    },
+    "temperature_pcieport3": {
+        "metric_type": "FLOAT",
+        "alias": "PCIe port 3 temperature",
+        "description": "Temperature at PCIe bus port 3",
+        "component_type": "MOTHERBOARD",
+        "warning_threshold": 55.0,
+        "critical_threshold": 70.0
+    },
+    "temperature_pcieport4": {
+        "metric_type": "FLOAT",
+        "alias": "PCIe port 4 temperature",
+        "description": "Temperature at PCIe bus port 4",
+        "component_type": "MOTHERBOARD",
+        "warning_threshold": 55.0,
+        "critical_threshold": 70.0
+    },
+    "temperature_pcieport5": {
+        "metric_type": "FLOAT",
+        "alias": "PCIe port 5 temperature",
+        "description": "Temperature at PCIe bus port 5",
+        "component_type": "MOTHERBOARD",
+        "warning_threshold": 55.0,
+        "critical_threshold": 70.0
+    },
+    "temperature_pcieport6": {
+        "metric_type": "FLOAT",
+        "alias": "PCIe port 6 temperature",
+        "description": "Temperature at PCIe bus port 6",
+        "component_type": "MOTHERBOARD",
+        "warning_threshold": 55.0,
+        "critical_threshold": 70.0
+    },
+    "temperature_pcieport7": {
+        "metric_type": "FLOAT",
+        "alias": "PCIe port 7 temperature",
+        "description": "Temperature at PCIe bus port 7",
+        "component_type": "MOTHERBOARD",
+        "warning_threshold": 55.0,
+        "critical_threshold": 70.0
+    },
+    "temperature_nvidia_g2": {
+        "metric_type": "FLOAT",
+        "alias": "NVIDIA G2 GPU temperature",
+        "description": "Secondary NVIDIA GPU temperature",
+        "component_type": "GPU",
+        "warning_threshold": 80.0,
+        "critical_threshold": 95.0
+    },
+    "temperature_asus_nic_temp": {
+        "metric_type": "FLOAT",
+        "alias": "ASUS NIC temperature",
+        "description": "Network interface card temperature",
+        "component_type": "NETWORK",
+        "warning_threshold": 65.0,
+        "critical_threshold": 80.0
+    },
+    "temperature_iwlwifi_1": {
+        "metric_type": "FLOAT",
+        "alias": "Intel WiFi NIC temperature",
+        "description": "Temperature of Intel wireless network interface",
+        "component_type": "NETWORK",
+        "warning_threshold": 65.0,
+        "critical_threshold": 80.0
+    },
+    "temperature_ath9k": {
+        "metric_type": "FLOAT",
+        "alias": "Atheros 9000 series NIC temperature",
+        "description": "Temperature of Atheros wireless network interface",
+        "component_type": "NETWORK",
+        "warning_threshold": 65.0,
+        "critical_threshold": 80.0
+    },
+    "temperature_rtl8xxxu": {
+        "metric_type": "FLOAT",
+        "alias": "Realtek 802.11 NIC temperature",
+        "description": "Temperature of Realtek wireless network interface",
+        "component_type": "NETWORK",
+        "warning_threshold": 65.0,
+        "critical_threshold": 80.0
+    },
+    "temperature_brcm80211": {
+        "metric_type": "FLOAT",
+        "alias": "Broadcom 802.11 NIC temperature",
+        "description": "Temperature of Broadcom wireless network interface",
+        "component_type": "NETWORK",
+        "warning_threshold": 65.0,
+        "critical_threshold": 80.0
+    },
+    "temperature_mt76": {
+        "metric_type": "FLOAT",
+        "alias": "MediaTek 76 NIC temperature",
+        "description": "Temperature of MediaTek wireless network interface",
+        "component_type": "NETWORK",
+        "warning_threshold": 65.0,
+        "critical_threshold": 80.0
+    },
+    "temperature_wlan": {
+        "metric_type": "FLOAT",
+        "alias": "Generic WLAN NIC temperature",
+        "description": "Temperature of wireless network interface",
+        "component_type": "NETWORK",
+        "warning_threshold": 65.0,
+        "critical_threshold": 80.0
+    },
+    "temperature_phyintel": {
+        "metric_type": "FLOAT",
+        "alias": "Intel PHY temperature",
+        "description": "Temperature of Intel physical layer component",
+        "component_type": "NETWORK",
+        "warning_threshold": 65.0,
+        "critical_threshold": 80.0
+    },
+    "temperature_phyath": {
+        "metric_type": "FLOAT",
+        "alias": "Atheros PHY temperature",
+        "description": "Temperature of Atheros physical layer component",
+        "component_type": "NETWORK",
+        "warning_threshold": 65.0,
+        "critical_threshold": 80.0
+    },
+    "temperature_phyrtllibusb": {
+        "metric_type": "FLOAT",
+        "alias": "Realtek USB PHY temperature",
+        "description": "Temperature of Realtek USB physical layer component",
+        "component_type": "NETWORK",
+        "warning_threshold": 65.0,
+        "critical_threshold": 80.0
+    },
+    "temperature_phyrtlnet": {
+        "metric_type": "FLOAT",
+        "alias": "Realtek Net PHY temperature",
+        "description": "Temperature of Realtek network physical layer component",
+        "component_type": "NETWORK",
+        "warning_threshold": 65.0,
+        "critical_threshold": 80.0
+    },
+    "temperature_gigabyte_wmi": {
+        "metric_type": "FLOAT",
+        "alias": "GIGABYTE WMI temperature",
+        "description": "GIGABYTE motherboard thermal sensor",
+        "component_type": "MOTHERBOARD",
+        "warning_threshold": 60.0,
+        "critical_threshold": 75.0
+    }
+}

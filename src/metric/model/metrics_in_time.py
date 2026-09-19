@@ -5,11 +5,11 @@ from typing import Any
 
 from pydantic import BaseModel, field_serializer
 
-from src.metric.model.metric import Metric
+from .metric import Metric
 
 
-class StoredMetrics(BaseModel):
-    """Represents a metric that has been stored, potentially with additional metadata or methods for persistence."""
+class MetricsInTime(BaseModel):
+    """Represents a batch of metrics that has been stored at a specific point in time."""
 
     stored_at: datetime
     metrics: list[Metric]

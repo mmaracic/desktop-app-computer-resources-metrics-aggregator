@@ -1,0 +1,10 @@
+{
+    "fan_speed_amdgpu": {
+        "metric_type": "INTEGER",
+        "alias": "GPU fan speed",
+        "description": "Rotational speed of the graphics card cooling fan in RPM",
+        "component_type": "GPU",
+        "warning_threshold": 4000,
+        "critical_threshold": 6000
+    }
+}

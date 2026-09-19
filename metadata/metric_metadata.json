@@ -1,0 +1,306 @@
+{
+    "card0_gpu_busy_percent": {
+        "metric_type": "FLOAT",
+        "alias": "GPU 0 utilization percentage",
+        "description": "Shows how much the GPU is actively processing graphics workloads",
+        "component_type": "GPU",
+        "warning_threshold": 85.0,
+        "critical_threshold": 95.0
+    },
+    "card1_gpu_busy_percent": {
+        "metric_type": "FLOAT",
+        "alias": "GPU 1 utilization percentage",
+        "description": "Shows how much the GPU is actively processing graphics workloads",
+        "component_type": "GPU",
+        "warning_threshold": 85.0,
+        "critical_threshold": 95.0
+    },
+    "card0_gtt_utilization_percent": {
+        "metric_type": "FLOAT",
+        "alias": "GPU 0 shared graphics memory usage percentage",
+        "description": "Tracks usage of system RAM allocated for GPU operations",
+        "component_type": "GPU",
+        "warning_threshold": 85.0,
+        "critical_threshold": 95.0
+    },
+    "card1_gtt_utilization_percent": {
+        "metric_type": "FLOAT",
+        "alias": "GPU 1 shared graphics memory usage percentage",
+        "description": "Tracks usage of system RAM allocated for GPU operations",
+        "component_type": "GPU",
+        "warning_threshold": 85.0,
+        "critical_threshold": 95.0
+    },
+    "card0_gpu_clock_mhz": {
+        "metric_type": "INTEGER",
+        "alias": "GPU 0 current clock frequency in MHz",
+        "description": "Indicates the GPU's operating speed for graphics processing",
+        "component_type": "GPU",
+        "warning_threshold": null,
+        "critical_threshold": null
+    },
+    "card1_gpu_clock_mhz": {
+        "metric_type": "INTEGER",
+        "alias": "GPU 1 current clock frequency in MHz",
+        "description": "Indicates the GPU's operating speed for graphics processing",
+        "component_type": "GPU",
+        "warning_threshold": null,
+        "critical_threshold": null
+    },
+    "card0_gpu_power_milliwatts": {
+        "metric_type": "INTEGER",
+        "alias": "GPU 0 current power consumption in mW",
+        "description": "Shows how much electrical power the GPU is currently using",
+        "component_type": "GPU",
+        "warning_threshold": null,
+        "critical_threshold": null
+    },
+    "card1_gpu_power_milliwatts": {
+        "metric_type": "INTEGER",
+        "alias": "GPU 1 current power consumption in mW",
+        "description": "Shows how much electrical power the GPU is currently using",
+        "component_type": "GPU",
+        "warning_threshold": null,
+        "critical_threshold": null
+    },
+    "card0_gpu_memory_clock_mhz": {
+        "metric_type": "INTEGER",
+        "alias": "GPU 0 memory clock frequency in MHz",
+        "description": "Indicates the speed of GPU video memory operations",
+        "component_type": "GPU",
+        "warning_threshold": null,
+        "critical_threshold": null
+    },
+    "card1_gpu_memory_clock_mhz": {
+        "metric_type": "INTEGER",
+        "alias": "GPU 1 memory clock frequency in MHz",
+        "description": "Indicates the speed of GPU video memory operations",
+        "component_type": "GPU",
+        "warning_threshold": null,
+        "critical_threshold": null
+    },
+    "cpu_usage_percent": {
+        "metric_type": "FLOAT",
+        "alias": "Overall CPU utilization percentage",
+        "description": "Shows how much CPU capacity is currently being used across all processors",
+        "component_type": "CPU",
+        "warning_threshold": 80.0,
+        "critical_threshold": 95.0
+    },
+    "cpu_count_logical": {
+        "metric_type": "INTEGER",
+        "alias": "Total number of logical CPU cores",
+        "description": "Indicates the total count of logical processors available in the system",
+        "component_type": "CPU",
+        "warning_threshold": null,
+        "critical_threshold": null
+    },
+    "memory_total_bytes": {
+        "metric_type": "INTEGER",
+        "alias": "Total system memory in bytes",
+        "description": "Indicates the total amount of physical memory installed in the system",
+        "component_type": "RAM",
+        "warning_threshold": null,
+        "critical_threshold": null
+    },
+    "memory_used_bytes": {
+        "metric_type": "INTEGER",
+        "alias": "Used system memory in bytes",
+        "description": "Shows the amount of memory currently being used by processes and kernel",
+        "component_type": "RAM",
+        "warning_threshold": null,
+        "critical_threshold": null
+    },
+    "memory_free_bytes": {
+        "metric_type": "INTEGER",
+        "alias": "Free system memory in bytes",
+        "description": "Indicates the amount of memory that is completely unused",
+        "component_type": "RAM",
+        "warning_threshold": null,
+        "critical_threshold": null
+    },
+    "memory_active_bytes": {
+        "metric_type": "INTEGER",
+        "alias": "Active memory in bytes",
+        "description": "Shows memory that is actively being used by processes",
+        "component_type": "RAM",
+        "warning_threshold": null,
+        "critical_threshold": null
+    },
+    "memory_inactive_bytes": {
+        "metric_type": "INTEGER",
+        "alias": "Inactive memory in bytes",
+        "description": "Indicates memory that is available for immediate reuse",
+        "component_type": "RAM",
+        "warning_threshold": null,
+        "critical_threshold": null
+    },
+    "memory_buffers_bytes": {
+        "metric_type": "INTEGER",
+        "alias": "Buffer memory in bytes",
+        "description": "Shows memory used for I/O buffers",
+        "component_type": "RAM",
+        "warning_threshold": null,
+        "critical_threshold": null
+    },
+    "memory_cached_bytes": {
+        "metric_type": "INTEGER",
+        "alias": "Cached memory in bytes",
+        "description": "Indicates memory used for file system cache",
+        "component_type": "RAM",
+        "warning_threshold": null,
+        "critical_threshold": null
+    },
+    "memory_shared_bytes": {
+        "metric_type": "INTEGER",
+        "alias": "Shared memory in bytes",
+        "description": "Shows memory that is shared between processes",
+        "component_type": "RAM",
+        "warning_threshold": null,
+        "critical_threshold": null
+    },
+    "memory_slab_bytes": {
+        "metric_type": "INTEGER",
+        "alias": "Slab memory in bytes",
+        "description": "Indicates kernel data structure cache memory",
+        "component_type": "RAM",
+        "warning_threshold": null,
+        "critical_threshold": null
+    },
+    "memory_usage_percent": {
+        "metric_type": "FLOAT",
+        "alias": "System RAM utilization percentage",
+        "description": "Indicates how much of the available memory is currently in use",
+        "component_type": "RAM",
+        "warning_threshold": 80.0,
+        "critical_threshold": 95.0
+    },
+    "disk_usage_percent": {
+        "metric_type": "FLOAT",
+        "alias": "Root filesystem disk usage percentage",
+        "description": "Shows how much of the system drive is occupied with data and applications",
+        "component_type": "DISK",
+        "warning_threshold": 80.0,
+        "critical_threshold": 95.0
+    },
+    "cpu_frequency_mhz": {
+        "metric_type": "INTEGER",
+        "alias": "Current CPU operating frequency in MHz",
+        "description": "Indicates the actual speed at which the processor is running",
+        "component_type": "CPU",
+        "warning_threshold": null,
+        "critical_threshold": null
+    },
+    "cpu_context_switches_voluntary": {
+        "metric_type": "INTEGER",
+        "alias": "Total voluntary context switches",
+        "description": "Counts CPU task switches when processes voluntarily yield control",
+        "component_type": "CPU",
+        "warning_threshold": null,
+        "critical_threshold": null
+    },
+    "cpu_interrupts": {
+        "metric_type": "INTEGER",
+        "alias": "Total involuntary context switches",
+        "description": "Counts CPU task switches forced by the system due to resource constraints",
+        "component_type": "CPU",
+        "warning_threshold": null,
+        "critical_threshold": null
+    },
+    "memory_available_mb": {
+        "metric_type": "INTEGER",
+        "alias": "Available system memory in MB",
+        "description": "Shows how much RAM is currently free for new applications and processes",
+        "component_type": "RAM",
+        "warning_threshold": null,
+        "critical_threshold": null
+    },
+    "swap_usage_percent": {
+        "metric_type": "FLOAT",
+        "alias": "Swap space utilization percentage",
+        "description": "Indicates how much of the virtual memory (page file/swap) is currently in use",
+        "component_type": "RAM",
+        "warning_threshold": 50.0,
+        "critical_threshold": 80.0
+    },
+    "swap_used_mb": {
+        "metric_type": "INTEGER",
+        "alias": "Used swap space in MB",
+        "description": "Shows the amount of virtual memory currently being used on disk",
+        "component_type": "RAM",
+        "warning_threshold": null,
+        "critical_threshold": null
+    },
+    "network_bytes_sent": {
+        "metric_type": "INTEGER",
+        "alias": "Total network bytes transmitted",
+        "description": "Cumulative count of data sent out through all network interfaces",
+        "component_type": "NETWORK",
+        "warning_threshold": null,
+        "critical_threshold": null
+    },
+    "network_bytes_received": {
+        "metric_type": "INTEGER",
+        "alias": "Total network bytes received",
+        "description": "Cumulative count of data received through all network interfaces",
+        "component_type": "NETWORK",
+        "warning_threshold": null,
+        "critical_threshold": null
+    },
+    "disk_read_count": {
+        "metric_type": "INTEGER",
+        "alias": "Total disk read operations",
+        "description": "Counts the number of times data has been read from the storage device",
+        "component_type": "DISK",
+        "warning_threshold": null,
+        "critical_threshold": null
+    },
+    "disk_write_count": {
+        "metric_type": "INTEGER",
+        "alias": "Total disk write operations",
+        "description": "Counts the number of times data has been written to the storage device",
+        "component_type": "DISK",
+        "warning_threshold": null,
+        "critical_threshold": null
+    },
+    "disk_read_bytes": {
+        "metric_type": "INTEGER",
+        "alias": "Total bytes read from disk",
+        "description": "Cumulative number of bytes read from all storage devices",
+        "component_type": "DISK",
+        "warning_threshold": null,
+        "critical_threshold": null
+    },
+    "disk_write_bytes": {
+        "metric_type": "INTEGER",
+        "alias": "Total bytes written to disk",
+        "description": "Cumulative number of bytes written to all storage devices",
+        "component_type": "DISK",
+        "warning_threshold": null,
+        "critical_threshold": null
+    },
+    "disk_read_time_ms": {
+        "metric_type": "INTEGER",
+        "alias": "Total disk read time in milliseconds",
+        "description": "Cumulative time spent reading data from all storage devices",
+        "component_type": "DISK",
+        "warning_threshold": null,
+        "critical_threshold": null
+    },
+    "disk_write_time_ms": {
+        "metric_type": "INTEGER",
+        "alias": "Total disk write time in milliseconds",
+        "description": "Cumulative time spent writing data to all storage devices",
+        "component_type": "DISK",
+        "warning_threshold": null,
+        "critical_threshold": null
+    },
+    "fan_speed_amdgpu": {
+        "metric_type": "INTEGER",
+        "alias": "GPU fan speed - rotational speed of the graphics card cooling fan in RPM",
+        "description": "Fan speed reading from amdgpu sensor",
+        "component_type": "GPU",
+        "warning_threshold": 4000,
+        "critical_threshold": 6000
+    }
+}

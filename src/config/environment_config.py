@@ -14,10 +14,12 @@ class EnvironmentConfig(BaseSettings):
     """
 
     metric_refresh_interval: int = 5  # Interval in seconds to refresh metrics
-    metric_filename: str = "daily_metrics.json"  # Filename for storing daily metrics
+    metric_filename: str = "daily_metrics"  # Filename for storing daily metrics
 
     azure_usage_enabled: bool = False  # Flag to enable or disable Azure usage
-    azure_blob_container_name: str = "metrics" # Name of the Azure Blob Storage container
+    azure_blob_container_name: str = (
+        "metrics"  # Name of the Azure Blob Storage container
+    )
     azure_blob_connection_string: str  # Connection string for Azure Blob Storage
 
     model_config = SettingsConfigDict(

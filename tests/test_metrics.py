@@ -2,12 +2,24 @@ import json
 
 import pytest
 
+from src.config.metadata_reader import MetadataReader
+from src.metric.model.metric_metadata import MetricMetadata
 from src.providers.ati_gpu_provider import AtiGpuProvider
 from src.providers.resource_utilization_provider import ResourceUtilizationProvider
 from src.providers.temperature_provider import TemperatureProvider
 
 
-def test_all_metrics_output():
+def test_all_metrics_output() -> None:
+    # Metadata
+    metadata_map: dict[str, MetricMetadata] = {}
+    metadata_map.update(
+        MetadataReader(file_path="metadata/temperature_metadata.json").read(),
+    )
+    metadata_map.update(MetadataReader(file_path="metadata/fan_metadata.json").read())
+    metadata_map.update(
+        MetadataReader(file_path="metadata/metric_metadata.json").read(),
+    )
+
     # Initialize providers
     temp_provider = TemperatureProvider()
     resource_provider = ResourceUtilizationProvider()
@@ -17,13 +29,13 @@ def test_all_metrics_output():
     all_metrics = {}
 
     # Update dictionary with metrics from each provider using aliases
-    for metric in temp_provider.get_metrics():
+    for metric in temp_provider.get_metrics(metadata_map):
         all_metrics[metric.get_alias()] = metric.value
 
-    for metric in resource_provider.get_metrics():
+    for metric in resource_provider.get_metrics(metadata_map):
         all_metrics[metric.get_alias()] = metric.value
 
-    for metric in ati_gpu_provider.get_metrics():
+    for metric in ati_gpu_provider.get_metrics(metadata_map):
         all_metrics[metric.get_alias()] = metric.value
 
     # Sort metrics alphabetically by key
@@ -50,12 +62,12 @@ def test_all_metrics_output():
 
     # Check for temperature metrics using aliases
     temp_aliases = [
-        alias for alias in sorted_metrics.keys() if "temperature" in alias.lower()
+        alias for alias in sorted_metrics if "temperature" in alias.lower()
     ]
     assert len(temp_aliases) > 0, "Expected at least one temperature metric"
 
     # Check for fan speed metrics using aliases
     fan_aliases = [
-        alias for alias in sorted_metrics.keys() if "fan speed" in alias.lower()
+        alias for alias in sorted_metrics if "fan speed" in alias.lower()
     ]
     assert len(fan_aliases) > 0, "Expected at least one fan speed metric"
