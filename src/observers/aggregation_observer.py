@@ -26,13 +26,13 @@ class AggregationObserver(MetricObserver):
         if changed_metrics:
             logger.info("Detected changed metrics: %d", len(changed_metrics))
             self._last_metrics.update(
-                {metric.name: metric.value for metric in changed_metrics}
+                {metric.name: metric.value for metric in changed_metrics},
             )
             for updater in self._metric_updaters:
                 updater.update(
                     MetricsInTime(
-                        stored_at=metrics_in_time.stored_at, metrics=changed_metrics
-                    )
+                        stored_at=metrics_in_time.stored_at, metrics=changed_metrics,
+                    ),
                 )
         else:
             logger.info("No changed metrics detected")

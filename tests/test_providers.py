@@ -1,4 +1,3 @@
-import pytest
 
 from src.config.metadata_reader import MetadataReader
 from src.metric.model.metric import Metric

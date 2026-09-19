@@ -1,4 +1,4 @@
-"This module defines the API routes for the FastAPI application." ""
+"""This module defines the API routes for the FastAPI application."""
 from fastapi import APIRouter
 
 router = APIRouter()

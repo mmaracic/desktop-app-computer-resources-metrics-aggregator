@@ -24,7 +24,7 @@ class StorageService:
         azure_files = self.azure_storage.list_files()
         timestamp = datetime.now(UTC).strftime("%Y%m%d")
         today_pattern = re.compile(
-            f"^{re.escape(self.base_file_name)}_{timestamp}\\.json$"
+            f"^{re.escape(self.base_file_name)}_{timestamp}\\.json$",
         )
 
         for file_name in local_files:
@@ -53,7 +53,7 @@ class StorageService:
 
             if current_tier not in (StorageTier.HOT, StorageTier.COLD):
                 raise ValueError(
-                    f"Blob {file_name} is in tier {current_tier}, only Hot and Cold tiers are allowed"
+                    f"Blob {file_name} is in tier {current_tier}, only Hot and Cold tiers are allowed",
                 )
 
             if (

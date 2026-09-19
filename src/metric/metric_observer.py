@@ -18,4 +18,3 @@ class MetricObserver(ABC):
             metrics_in_time: A MetricsInTime object to process.
 
         """
-        pass

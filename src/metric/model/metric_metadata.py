@@ -44,4 +44,3 @@ class MetricMetadata(BaseModel):
         """Serialize the component type enum to its plain name for JSON output."""
         return component_type.name
 
- 

@@ -28,6 +28,7 @@ class MetricRegistry:
 
         Args:
             provider: A MetricProvider instance to register.
+
         """
         self._metrics.append(provider)
 
@@ -36,6 +37,7 @@ class MetricRegistry:
 
         Args:
             observer: A MetricObserver instance to register.
+
         """
         self._observers.append(observer)
 
@@ -52,7 +54,7 @@ class MetricRegistry:
         if len(all_metrics) != 0:
             timestamp = datetime.now(UTC).strftime("%Y%m%d")
             metrics_in_time = MetricsInTime(
-                stored_at=datetime.now(UTC), metrics=all_metrics
+                stored_at=datetime.now(UTC), metrics=all_metrics,
             )
 
             logger.info(

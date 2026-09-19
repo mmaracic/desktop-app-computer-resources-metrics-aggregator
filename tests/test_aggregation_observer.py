@@ -71,7 +71,7 @@ def test_update_forwards_only_changed_metrics() -> None:
                 _build_metric("memory_usage_percent", 20.0),
             ],
             stored_at=datetime.now(UTC),
-        )
+        ),
     )
     observer.update(
         MetricsInTime(
@@ -80,7 +80,7 @@ def test_update_forwards_only_changed_metrics() -> None:
                 _build_metric("memory_usage_percent", 25.0),
             ],
             stored_at=datetime.now(UTC),
-        )
+        ),
     )
 
     assert len(updater.received_updates) == 2

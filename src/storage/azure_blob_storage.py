@@ -153,7 +153,7 @@ class AzureBlobStorage:
         blob_client = container_client.get_blob_client(blob.name)
         properties = blob_client.get_blob_properties()
         tier = properties.blob_tier
-        return tier if tier else None
+        return tier or None
 
     def set_blob_tier(self, blob: RepoBlob, tier: StorageTier) -> bool:
         """Set the storage tier for a blob.

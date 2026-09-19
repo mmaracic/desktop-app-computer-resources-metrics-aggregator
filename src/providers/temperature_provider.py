@@ -22,7 +22,7 @@ class TemperatureProvider(MetricProvider):
                             value=temp.current,
                             metadata=metadata,
                         ),
-                    ]
+                    ],
                 )
 
         # Fan Speeds
@@ -35,8 +35,8 @@ class TemperatureProvider(MetricProvider):
                             name=f"fan_speed_{name}",
                             value=fan.current,
                             metadata=metadata,
-                        )
-                    ]
+                        ),
+                    ],
                 )
 
         return metrics

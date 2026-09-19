@@ -3,7 +3,6 @@
 import json
 from datetime import UTC, datetime
 from pathlib import Path
-from unittest.mock import patch
 
 from src.metric.model.component_type import ComponentType
 from src.metric.model.metric import Metric

@@ -77,7 +77,7 @@ def setup_logging(
         max_bytes = 10 * 1024 * 1024  # 10 MB
         backup_count = 5
         file_handler = logging.handlers.RotatingFileHandler(
-            log_file, maxBytes=max_bytes, backupCount=backup_count, encoding="utf-8"
+            log_file, maxBytes=max_bytes, backupCount=backup_count, encoding="utf-8",
         )
         file_handler.setFormatter(formatter)
         file_handler.setLevel(log_level)
@@ -99,7 +99,7 @@ def setup_logging(
 
 # Setup logging at module level (can be reconfigured per run)
 logger = setup_logging(
-    log_to_file=False, log_level=logging.INFO
+    log_to_file=False, log_level=logging.INFO,
 )  # Default to console only
 
 
@@ -135,13 +135,13 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     metric_registry.register_metric_provider(TemperatureProvider())
 
     metric_registry.register_metric_observer(
-        AggregationObserver([file_updater, react_ui_updater])
+        AggregationObserver([file_updater, react_ui_updater]),
     )
     app.state.metric_registry = metric_registry
 
     if env_config.azure_usage_enabled:
         azure_storage = AzureBlobStorage(
-            connection_string=env_config.azure_blob_connection_string
+            connection_string=env_config.azure_blob_connection_string,
         )
         storage_service = StorageService(
             azure_storage=azure_storage,
@@ -149,16 +149,16 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
             base_file_name=env_config.metric_filename,
         )
         storage_service.upload_local_files_to_azure(
-            env_config.azure_blob_container_name
+            env_config.azure_blob_container_name,
         )
         storage_service.change_tier_of_blobs_in_azure(
-            env_config.azure_blob_container_name
+            env_config.azure_blob_container_name,
         )
 
     stop_event = threading.Event()
     metric_thread = threading.Thread(
         target=lambda: asyncio.run(
-            fetch_metrics_periodically(metric_registry, env_config, stop_event)
+            fetch_metrics_periodically(metric_registry, env_config, stop_event),
         ),
         daemon=True,
     )
@@ -205,11 +205,11 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
 
 
 async def _run_backend_server(
-    config: Config, sem: Semaphore, server_holder: list[uvicorn.Server]
+    config: Config, sem: Semaphore, server_holder: list[uvicorn.Server],
 ) -> None:
     """Start the uvicorn server in a background thread with a semaphore to block main thread until the server is ready."""
     uvicorn_config = uvicorn.Config(
-        app, host=config.host, port=config.port, log_level="info", log_config=None
+        app, host=config.host, port=config.port, log_level="info", log_config=None,
     )
     server = uvicorn.Server(uvicorn_config)
     server_holder.append(server)  # Store the server instance in the list
@@ -234,10 +234,10 @@ def parse_args() -> Config:
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description="Agentic desktop application")
     parser.add_argument(
-        "--host", type=str, default="127.0.0.1", help="Host for the backend server"
+        "--host", type=str, default="127.0.0.1", help="Host for the backend server",
     )
     parser.add_argument(
-        "--port", type=int, default=5000, help="Port for the backend server"
+        "--port", type=int, default=5000, help="Port for the backend server",
     )
     parser.add_argument(
         "--dev",
@@ -251,7 +251,7 @@ def parse_args() -> Config:
     )
     args = parser.parse_args()
     return Config(
-        host=args.host, port=args.port, dev=args.dev, log_to_file=args.log_to_file
+        host=args.host, port=args.port, dev=args.dev, log_to_file=args.log_to_file,
     )
 
 
@@ -267,7 +267,7 @@ def main() -> None:
     else:
         app.add_api_route("/", _dev_proxy, methods=["GET", "HEAD", "OPTIONS"])
         app.add_api_route(
-            "/{path:path}", _dev_proxy, methods=["GET", "HEAD", "OPTIONS"]
+            "/{path:path}", _dev_proxy, methods=["GET", "HEAD", "OPTIONS"],
         )
 
     server_holder: list[uvicorn.Server] = []  # List to hold the server instance

@@ -52,5 +52,6 @@ class EnvironmentConfig(BaseSettings):
 
         Returns:
             Tuple of settings sources in priority order.
+
         """
         return env_settings, dotenv_settings, init_settings

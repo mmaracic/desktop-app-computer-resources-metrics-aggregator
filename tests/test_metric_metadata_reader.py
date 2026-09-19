@@ -53,7 +53,7 @@ def test_read_handles_missing_warning_critical_values(tmp_path: Path) -> None:
                 "component_type": "MOTHERBOARD",
                 "warning_threshold": None,
                 "critical_threshold": None,
-            }
+            },
         },
     )
 

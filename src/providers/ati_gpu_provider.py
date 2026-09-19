@@ -28,7 +28,7 @@ class AtiGpuProvider(MetricProvider):
                     name=f"{card}_gpu_busy_percent",
                     value=float(self._read_sysfs(path, "gpu_busy_percent")),
                     metadata=metadata,
-                )
+                ),
             )
 
             # VRAM metrics - already covered by TemperatureProvider's broader sensor approach, skip to avoid duplication
@@ -42,21 +42,21 @@ class AtiGpuProvider(MetricProvider):
                         name=f"{card}_gtt_utilization_percent",
                         value=float(gtt_used) / float(gtt_total) * 100.0,
                         metadata=metadata,
-                    )
+                    ),
                 )
 
             # GPU Clock Frequency - unique metric not covered by other providers
             try:
                 freq_path = f"{path}/hwmon/hwmon5/freq1_input"
                 if Path(freq_path).exists():
-                    with open(freq_path, "r", encoding="utf-8") as f:
+                    with open(freq_path, encoding="utf-8") as f:
                         freq_mhz = int(f.read().strip())
                     metrics.append(
                         self.createMetric(
                             name=f"{card}_gpu_clock_mhz",
                             value=freq_mhz,
                             metadata=metadata,
-                        )
+                        ),
                     )
             except (ValueError, OSError):
                 pass
@@ -65,14 +65,14 @@ class AtiGpuProvider(MetricProvider):
             try:
                 power_path = f"{path}/hwmon/hwmon5/power1_input"
                 if Path(power_path).exists():
-                    with open(power_path, "r", encoding="utf-8") as f:
+                    with open(power_path, encoding="utf-8") as f:
                         power_milliwatts = int(f.read().strip())
                     metrics.append(
                         self.createMetric(
                             name=f"{card}_gpu_power_milliwatts",
                             value=power_milliwatts,
                             metadata=metadata,
-                        )
+                        ),
                     )
             except (ValueError, OSError):
                 pass
@@ -81,14 +81,14 @@ class AtiGpuProvider(MetricProvider):
             try:
                 mem_freq_path = f"{path}/hwmon/hwmon5/freq2_input"
                 if Path(mem_freq_path).exists():
-                    with open(mem_freq_path, "r", encoding="utf-8") as f:
+                    with open(mem_freq_path, encoding="utf-8") as f:
                         mem_freq_mhz = int(f.read().strip())
                     metrics.append(
                         self.createMetric(
                             name=f"{card}_gpu_memory_clock_mhz",
                             value=mem_freq_mhz,
                             metadata=metadata,
-                        )
+                        ),
                     )
             except (ValueError, OSError):
                 pass
@@ -99,7 +99,7 @@ class AtiGpuProvider(MetricProvider):
         full_path = Path(path) / filename
         if full_path.exists():
             try:
-                with open(full_path, "r", encoding="utf-8") as f:
+                with open(full_path, encoding="utf-8") as f:
                     return int(f.read().strip())
             except (ValueError, OSError):
                 return 0

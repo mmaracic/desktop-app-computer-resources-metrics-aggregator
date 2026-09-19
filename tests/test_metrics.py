@@ -1,7 +1,5 @@
 import json
 
-import pytest
-
 from src.config.metadata_reader import MetadataReader
 from src.metric.model.metric_metadata import MetricMetadata
 from src.providers.ati_gpu_provider import AtiGpuProvider

@@ -102,7 +102,7 @@ def test_upload_skips_todays_file(mock_datetime: MagicMock, tmp_path: Path) -> N
 
 @patch("src.storage.storage_service.datetime")
 def test_upload_skips_todays_file_when_exists_in_azure(
-    mock_datetime: MagicMock, tmp_path: Path
+    mock_datetime: MagicMock, tmp_path: Path,
 ) -> None:
     """Test that today's file is skipped when it already exists in Azure."""
     # Setup mock datetime
@@ -133,7 +133,7 @@ def test_upload_skips_todays_file_when_exists_in_azure(
 
 @patch("src.storage.storage_service.datetime")
 def test_upload_handles_empty_file_list(
-    mock_datetime: MagicMock, tmp_path: Path
+    mock_datetime: MagicMock, tmp_path: Path,
 ) -> None:
     """Test that upload handles empty file list gracefully."""
     # Setup mock datetime

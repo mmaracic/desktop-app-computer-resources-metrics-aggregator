@@ -6,7 +6,7 @@ from fastapi import Request, Response
 _VITE_DEV_HOST: str = "localhost"
 _VITE_DEV_PORT: int = 5173
 _EXCLUDED_PROXY_HEADERS: frozenset[str] = frozenset(
-    {"host", "content-encoding", "transfer-encoding", "content-length"}
+    {"host", "content-encoding", "transfer-encoding", "content-length"},
 )
 
 

@@ -23,7 +23,7 @@ class DiskTextFileStorage:
         for root, _, files in os.walk(self.base_path):
             for file in files:
                 file_list.append(
-                    os.path.relpath(os.path.join(root, file), self.base_path)
+                    os.path.relpath(os.path.join(root, file), self.base_path),
                 )
         return file_list
 
