@@ -302,5 +302,45 @@
         "component_type": "GPU",
         "warning_threshold": 4000,
         "critical_threshold": 6000
+    },
+    "top_process_1": {
+        "metric_type": "STRING",
+        "alias": "Top CPU and memory consuming process 1",
+        "description": "The process currently consuming the most CPU and/or memory resources",
+        "component_type": "PROCESS",
+        "warning_threshold": null,
+        "critical_threshold": null
+    },
+    "top_process_2": {
+        "metric_type": "STRING",
+        "alias": "Top CPU and memory consuming process 2",
+        "description": "The process currently consuming the most CPU and/or memory resources",
+        "component_type": "PROCESS",
+        "warning_threshold": null,
+        "critical_threshold": null
+    },
+    "top_process_3": {
+        "metric_type": "STRING",
+        "alias": "Top CPU and memory consuming process 3",
+        "description": "The process currently consuming the most CPU and/or memory resources",
+        "component_type": "PROCESS",
+        "warning_threshold": null,
+        "critical_threshold": null
+    },
+    "top_process_4": {
+        "metric_type": "STRING",
+        "alias": "Top CPU and memory consuming process 4",
+        "description": "The process currently consuming the most CPU and/or memory resources",
+        "component_type": "PROCESS",
+        "warning_threshold": null,
+        "critical_threshold": null
+    },
+    "top_process_5": {
+        "metric_type": "STRING",
+        "alias": "Top CPU and memory consuming process 5",
+        "description": "The process currently consuming the most CPU and/or memory resources",
+        "component_type": "PROCESS",
+        "warning_threshold": null,
+        "critical_threshold": null
     }
 }

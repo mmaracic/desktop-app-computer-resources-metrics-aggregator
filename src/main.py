@@ -28,6 +28,7 @@ from src.observers.aggregation_observer import AggregationObserver
 from src.providers.ati_gpu_provider import AtiGpuProvider
 from src.providers.resource_utilization_provider import ResourceUtilizationProvider
 from src.providers.temperature_provider import TemperatureProvider
+from src.providers.top_processes_provider import TopProcessesProvider
 from src.service.metrics_service import MetricsService
 from src.storage.azure_blob_storage import AzureBlobStorage
 from src.storage.disk_text_file_storage import DiskTextFileStorage
@@ -142,6 +143,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     metric_registry.register_metric_provider(AtiGpuProvider())
     metric_registry.register_metric_provider(ResourceUtilizationProvider())
     metric_registry.register_metric_provider(TemperatureProvider())
+    metric_registry.register_metric_provider(TopProcessesProvider())
 
     metric_registry.register_metric_observer(
         AggregationObserver([file_updater, react_ui_updater]),
@@ -197,9 +199,12 @@ async def fetch_metrics_periodically(
 ) -> None:
     """Background task that fetches metrics at regular intervals, running in its own thread."""
     logger.info("Starting background metric fetching task")
-    while not stop_event.is_set():
-        metric_registry.extract_metrics()
-        await asyncio.sleep(env_config.metric_refresh_interval)
+    try:
+        while not stop_event.is_set():
+            metric_registry.extract_metrics()
+            await asyncio.sleep(env_config.metric_refresh_interval)
+    except Exception as e:
+        logger.error("Error occurred in background metric fetching task: %s", e)  # noqa: TRY400
 
 
 app = FastAPI(lifespan=lifespan)

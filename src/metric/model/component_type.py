@@ -18,6 +18,7 @@ class ComponentType(Enum):
         DISK: Storage devices including HDDs and SSDs
         MOTHERBOARD: Main circuit board connecting all components
         NETWORK: Network interfaces and communication hardware
+        PROCESS: Individual processes running on the system
 
     """
 
@@ -27,3 +28,4 @@ class ComponentType(Enum):
     DISK = "disk"
     MOTHERBOARD = "motherboard"
     NETWORK = "network"
+    PROCESS = "process"
