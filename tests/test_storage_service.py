@@ -234,7 +234,7 @@ def test_upload_does_not_reupload_existing_azure_files(
 
     # Simulate that other_file.json already exists in Azure
     azure_storage.container_blobs_result = [
-        RepoBlob(name="other_file.json", container="test", size=0, data=b"")
+        RepoBlob(name="other_file.json", container="test", size=0, data=b""),
     ]
 
     service = StorageService(azure_storage, disk_storage, "daily_metrics")
@@ -337,7 +337,6 @@ def test_change_tier_raises_for_disallowed_tier(
 
     service = StorageService(azure_storage, disk_storage, "daily_metrics")
 
-    import pytest
 
     with pytest.raises(ValueError, match="only Hot and Cold tiers are allowed"):
         service.change_tier_of_blobs_in_azure("test-container")

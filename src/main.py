@@ -28,6 +28,7 @@ from src.observers.aggregation_observer import AggregationObserver
 from src.providers.ati_gpu_provider import AtiGpuProvider
 from src.providers.resource_utilization_provider import ResourceUtilizationProvider
 from src.providers.temperature_provider import TemperatureProvider
+from src.service.metrics_service import MetricsService
 from src.storage.azure_blob_storage import AzureBlobStorage
 from src.storage.disk_text_file_storage import DiskTextFileStorage
 from src.storage.storage_service import StorageService
@@ -125,11 +126,11 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     metadata_map: dict[str, MetricMetadata] = {}
     metadata_map.update(
-        MetadataReader(file_path="metadata/temperature_metadata.json").read()
+        MetadataReader(file_path="metadata/temperature_metadata.json").read(),
     )
     metadata_map.update(MetadataReader(file_path="metadata/fan_metadata.json").read())
     metadata_map.update(
-        MetadataReader(file_path="metadata/metric_metadata.json").read()
+        MetadataReader(file_path="metadata/metric_metadata.json").read(),
     )
 
     disk_storage = DiskTextFileStorage(base_path=".")
@@ -147,6 +148,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     )
     app.state.metric_registry = metric_registry
 
+    azure_storage = None
     if env_config.azure_usage_enabled:
         azure_storage = AzureBlobStorage(
             connection_string=env_config.azure_blob_connection_string,
@@ -164,6 +166,13 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         )
     else:
         logger.info("Azure usage not enabled, skipping Azure storage operations")
+
+    metric_service = MetricsService(
+        disk_storage=disk_storage,
+        azure_storage=azure_storage,
+        base_file_name=env_config.metric_filename,
+    )
+    app.state.metric_service = metric_service
 
     stop_event = threading.Event()
     metric_thread = threading.Thread(

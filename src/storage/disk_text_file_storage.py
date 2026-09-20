@@ -61,3 +61,4 @@ class DiskTextFileStorage:
         file_path = os.path.join(self.base_path, file_name)
         with open(file_path, encoding="utf-8") as f:
             return f.read()
+
