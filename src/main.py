@@ -21,6 +21,7 @@ from src.api import api
 from src.colored_log_formatter import ColoredLogFormatter
 from src.config.environment_config import EnvironmentConfig
 from src.config.metadata_reader import MetadataReader
+from src.config.metric_config_reader_writer import MetricConfigReaderWriter
 from src.dev_proxy import _dev_proxy
 from src.metric.metric_registry import MetricRegistry
 from src.metric.model.metric_metadata import MetricMetadata
@@ -175,6 +176,10 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         base_file_name=env_config.metric_filename,
     )
     app.state.metric_service = metric_service
+
+    # Create config reader/writer instance for API endpoints
+    config_reader_writer = MetricConfigReaderWriter()
+    app.state.config_reader_writer = config_reader_writer
 
     stop_event = threading.Event()
     metric_thread = threading.Thread(
