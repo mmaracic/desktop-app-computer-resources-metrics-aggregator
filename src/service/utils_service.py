@@ -2,7 +2,9 @@ import re
 from datetime import UTC, datetime
 
 DATE_FORMAT = "%Y%m%d"
-DATE_TIME_FORMAT = "%Y-%m-%dT%H:%M:%S.%f%z"
+# Try with microseconds first, then without
+DATE_TIME_FORMAT_WITH_MICROSECONDS = "%Y-%m-%dT%H:%M:%S.%f%z"
+DATE_TIME_FORMAT_WITHOUT_MICROSECONDS = "%Y-%m-%dT%H:%M:%S%z"
 
 
 class UtilsService:
@@ -49,4 +51,23 @@ class UtilsService:
             ValueError: If the date_string is not in a valid ISO 8601 format.
 
         """
-        return datetime.strptime(date_string, DATE_TIME_FORMAT).replace(tzinfo=UTC)
+        # Try with microseconds first, then without.
+        # Use astimezone(UTC) to convert the parsed offset (e.g. +02:00) to UTC,
+        # rather than replace(tzinfo=UTC) which would discard the offset and shift the instant.
+        try:
+            return datetime.strptime(
+                date_string, DATE_TIME_FORMAT_WITH_MICROSECONDS
+            ).astimezone(UTC)
+        except ValueError:
+            pass
+
+        try:
+            return datetime.strptime(
+                date_string, DATE_TIME_FORMAT_WITHOUT_MICROSECONDS
+            ).astimezone(UTC)
+        except ValueError:
+            pass
+
+        raise ValueError(
+            f"Invalid datetime format. Expected ISO 8601 with or without microseconds (e.g., '2026-09-21T12:30:45+00:00' or '2026-09-21T12:30:45.123456+00:00')"
+        )

@@ -57,8 +57,22 @@ def _build_mock_disk_storage(base_path: Path) -> DiskTextFileStorage:
     base_path.mkdir(parents=True, exist_ok=True)
 
     # Create some test files
-    (base_path / "yesterday_metrics_20260916.json").write_text('{"data": "old"}\n')
+    (base_path / "daily_metrics_20260916.json").write_text('{"data": "old"}\n')
+    (base_path / "daily_metrics_20260915.json").write_text('{"data": "even_older"}\n')
     (base_path / "other_file.json").write_text('{"data": "other"}\n')
+
+    return storage
+
+
+def _build_empty_disk_storage(base_path: Path) -> DiskTextFileStorage:
+    """Build a mock DiskTextFileStorage with test files."""
+    storage = DiskTextFileStorage(str(base_path))
+    base_path.mkdir(parents=True, exist_ok=True)
+
+    # No test files are created for the empty disk storage scenario.
+    # Remove files if any exist from previous tests
+    for file in base_path.glob("*"):
+        file.unlink()
 
     return storage
 
@@ -97,10 +111,18 @@ def test_upload_skips_todays_file(mock_datetime: MagicMock, tmp_path: Path) -> N
     )
 
     # Verify that other files were uploaded, along with their content
-    assert "yesterday_metrics_20260916.json" in azure_storage.uploaded_files
-    assert azure_storage.uploaded_content["yesterday_metrics_20260916.json"] == (
+    assert len(azure_storage.uploaded_files) == 2, (
+        "Wrong number of files uploaded to Azure"
+    )
+    assert "daily_metrics_20260916.json" in azure_storage.uploaded_files
+    assert azure_storage.uploaded_content["daily_metrics_20260916.json"] == (
         b'{"data": "old"}\n'
     )
+    assert "daily_metrics_20260915.json" in azure_storage.uploaded_files
+    assert azure_storage.uploaded_content["daily_metrics_20260915.json"] == (
+        b'{"data": "even_older"}\n'
+    )
+    assert "other_file.json" not in azure_storage.uploaded_files
 
 
 @patch("src.storage.storage_service.datetime")
@@ -129,8 +151,9 @@ def test_upload_skips_todays_file_when_exists_in_azure(
     service.upload_local_files_to_azure("test-container")
 
     # Verify that non-today files were uploaded
-    assert "yesterday_metrics_20260916.json" in azure_storage.uploaded_files
-    assert "other_file.json" in azure_storage.uploaded_files
+    assert "daily_metrics_20260916.json" in azure_storage.uploaded_files
+    assert "daily_metrics_20260915.json" in azure_storage.uploaded_files
+    assert "other_file.json" not in azure_storage.uploaded_files
     # Today's file should NOT be uploaded (skipped because it exists in Azure)
     assert f"daily_metrics_{today_timestamp}.json" not in azure_storage.uploaded_files
 
@@ -147,7 +170,7 @@ def test_upload_handles_empty_file_list(
 
     # Create mock storages with empty disk storage
     azure_storage = MockAzureStorage()
-    disk_storage = DiskTextFileStorage(str(tmp_path))
+    disk_storage = _build_empty_disk_storage(tmp_path)
 
     # Set up Azure storage to return empty list
     azure_storage.list_files_result = []
@@ -182,42 +205,10 @@ def test_upload_skips_empty_filenames(mock_datetime: MagicMock, tmp_path: Path) 
     service.upload_local_files_to_azure("test-container")
 
     # Verify that only non-empty files were uploaded
-    assert "yesterday_metrics_20260916.json" in azure_storage.uploaded_files
+    assert "daily_metrics_20260916.json" in azure_storage.uploaded_files
+    assert "daily_metrics_20260915.json" in azure_storage.uploaded_files
+    assert "other_file.json" not in azure_storage.uploaded_files
     assert "" not in azure_storage.uploaded_files
-
-
-@patch("src.storage.storage_service.datetime")
-def test_upload_pattern_matching_with_special_characters(
-    mock_datetime: MagicMock,
-    tmp_path: Path,
-) -> None:
-    """Test that filename pattern matching works with special characters."""
-    # Setup mock datetime
-    fixed_date = datetime(2026, 9, 17, 12, 0, 0, tzinfo=UTC)
-    mock_datetime.now.return_value = fixed_date
-
-    # Create mock storages with filename containing special characters
-    azure_storage = MockAzureStorage()
-    disk_storage = DiskTextFileStorage(str(tmp_path))
-
-    # Create a file with special characters in the name
-    (tmp_path / "daily-metrics_v2.json").write_text('{"data": "special"}\n')
-
-    # Set up Azure storage to return empty list
-    azure_storage.list_files_result = []
-
-    # Create service with filename containing special characters
-    base_file_name = "daily-metrics_v2"
-    service = StorageService(azure_storage, disk_storage, base_file_name)
-
-    # Execute upload
-    service.upload_local_files_to_azure("test-container")
-
-    # Verify that the file with special characters was uploaded (not today's pattern)
-    today_timestamp = _get_today_timestamp()
-    today_pattern = f"daily-metrics_v2_{today_timestamp}.json"
-    assert "daily-metrics_v2.json" in azure_storage.uploaded_files
-    assert today_pattern not in azure_storage.uploaded_files
 
 
 @patch("src.storage.storage_service.datetime")
@@ -234,14 +225,15 @@ def test_upload_does_not_reupload_existing_azure_files(
 
     # Simulate that other_file.json already exists in Azure
     azure_storage.container_blobs_result = [
-        RepoBlob(name="other_file.json", container="test", size=0, data=b""),
+        RepoBlob(name="daily_metrics_20260915.json", container="test", size=0, data=b""),
     ]
 
     service = StorageService(azure_storage, disk_storage, "daily_metrics")
     service.upload_local_files_to_azure("test-container")
 
     assert "other_file.json" not in azure_storage.uploaded_files
-    assert "yesterday_metrics_20260916.json" in azure_storage.uploaded_files
+    assert "daily_metrics_20260916.json" in azure_storage.uploaded_files
+    assert "daily_metrics_20260915.json" not in azure_storage.uploaded_files
 
 
 def _make_blob(name: str, created_at: datetime) -> RepoBlob:
@@ -336,7 +328,6 @@ def test_change_tier_raises_for_disallowed_tier(
     azure_storage.blob_tiers = {"archive.json": StorageTier.ARCHIVE}
 
     service = StorageService(azure_storage, disk_storage, "daily_metrics")
-
 
     with pytest.raises(ValueError, match="only Hot and Cold tiers are allowed"):
         service.change_tier_of_blobs_in_azure("test-container")

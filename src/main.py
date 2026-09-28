@@ -134,8 +134,11 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     metadata_map.update(
         MetadataReader(file_path="metadata/metric_metadata.json").read(),
     )
+    app.state.metric_metadata = metadata_map
 
-    disk_storage = DiskTextFileStorage(base_path=".")
+    disk_storage = DiskTextFileStorage(
+        base_path=".", metric_filename=env_config.metric_filename
+    )
     file_updater = FileUpdater(env_config.metric_filename, disk_storage)
     react_ui_updater = ReactUiUpdater()
     app.state.react_ui_updater = react_ui_updater
@@ -170,12 +173,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     else:
         logger.info("Azure usage not enabled, skipping Azure storage operations")
 
-    metric_service = MetricsService(
+    metrics_service = MetricsService(
         disk_storage=disk_storage,
         azure_storage=azure_storage,
         base_file_name=env_config.metric_filename,
     )
-    app.state.metric_service = metric_service
+    app.state.metrics_service = metrics_service
 
     # Create config reader/writer instance for API endpoints
     config_reader_writer = MetricConfigReaderWriter()

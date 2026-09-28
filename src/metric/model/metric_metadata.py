@@ -11,8 +11,8 @@ class MetricMetadata(BaseModel):
 
     Attributes:
         metric_type (MetricType): The type of the metric (e.g., Counter, Gauge).
-        min_value (Any): The minimum (safe) value of the metric.
-        max_value (Any): The maximum (safe) value of the metric.
+        warning_threshold (Any): The value at which a warning should be triggered for the metric.
+        critical_threshold (Any): The value at which a critical alert should be triggered for the metric.
         alias (str): A human-readable alias for the metric (max 80 characters).
         description (str): Extended explanation of the metric.
         component_type (ComponentType): The hardware component this metric belongs to.

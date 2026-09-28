@@ -25,7 +25,11 @@ class MetricsService:
         self.disk_storage = disk_storage
         self.base_file_name = base_file_name
 
-    def _load_metrics_from_file(self, file_path: str) -> list[MetricsInTime]:
+    def _load_metrics_from_file(
+        self,
+        file_path: str,
+        metric_metadata: dict[str, MetricMetadata],
+    ) -> list[MetricsInTime]:
         """Load metrics from a JSON Lines file (one MetricsInTime object per line).
 
         Args:
@@ -41,6 +45,7 @@ class MetricsService:
             file_content = self.disk_storage.read_file(file_path)
             lines = file_content.strip().split("\n")
 
+            logger.debug("Extracted %d lines from  file %s", len(lines), file_path)
             for line in lines:
                 if not line.strip():
                     continue
@@ -51,12 +56,30 @@ class MetricsService:
 
                 metrics = []
                 for metric_data in data.get("metrics", []):
-                    metric = Metric(
-                        name=metric_data["name"],
-                        value=metric_data["value"],
-                        metadata=MetricMetadata(**metric_data.get("metadata", {})),
-                    )
-                    metrics.append(metric)
+                    try:
+                        metadata = metric_metadata.get(metric_data["name"])
+                        if not metadata:
+                            logger.error(
+                                "Missing metadata for metric data %s in file %s",
+                                metric_data,
+                                file_path,
+                            )
+                            continue
+                        metric = Metric(
+                            name=metric_data["name"],
+                            value=metric_data["value"],
+                            metadata=metadata,
+                        )
+                        metrics.append(metric)
+                    except (KeyError, ValueError) as e:
+                        logger.warning(
+                            "Failed to parse metric from data %s in file %s: %s",
+                            metric_data,
+                            file_path,
+                            e,
+                        )
+                        continue
+                    # Removed as it's now handled inside the try-except block above
 
                 metrics_in_time_list.append(
                     MetricsInTime(stored_at=stored_at, metrics=metrics),
@@ -92,6 +115,7 @@ class MetricsService:
 
     def retrieve_metrics_by_datetime_range(
         self,
+        metric_metadata: dict[str, MetricMetadata],
         start_datetime: datetime,
         end_datetime: datetime,
         container_name: str | None = None,
@@ -101,6 +125,7 @@ class MetricsService:
         Local files always take precedence over Azure files to avoid downloading files that are already present locally.
 
         Args:
+            metric_metadata (dict[str, MetricMetadata]): Dictionary of metric metadata keyed by metric name.
             start_datetime (datetime): The start of the datetime range (inclusive).
             end_datetime (datetime): The end of the datetime range (inclusive).
             container_name (str | None): Optional Azure container name. If provided, Azure files will be considered
@@ -129,11 +154,21 @@ class MetricsService:
 
         for file_name in local_files:
             parsed_datetime = UtilsService.parse_datetime_from_filename(
-                file_name=file_name, base_file_name=self.base_file_name,
+                file_name=file_name,
+                base_file_name=self.base_file_name,
             )
-            if parsed_datetime and start_datetime <= parsed_datetime <= end_datetime:
+            if (
+                parsed_datetime
+                and start_datetime.date()
+                <= parsed_datetime.date()
+                <= end_datetime.date()
+            ):
                 full_path = str(Path(self.disk_storage.base_path) / file_name)
                 candidate_files[file_name] = full_path
+                logger.info(
+                    "Local file in range and added to candidate files: %s",
+                    file_name,
+                )
 
         # Get Azure files that are missing locally if container name is provided
         if self.azure_storage and container_name:
@@ -175,9 +210,12 @@ class MetricsService:
 
         for file_name, full_path in candidate_files.items():
             try:
-                loaded_metrics = self._load_metrics_from_file(full_path)
+                loaded_metrics = self._load_metrics_from_file(
+                    full_path,
+                    metric_metadata,
+                )
                 logger.info(
-                    "Loaded %d metrics from file: %s",
+                    "Loaded %d MetricsInTime objects from file: %s",
                     len(loaded_metrics),
                     file_name,
                 )
@@ -193,7 +231,7 @@ class MetricsService:
                 logger.exception("Failed to process file %s", full_path)
 
         logger.info(
-            "Retrieved %d MetricsInTime objects",
+            "Retrieved %d MetricsInTime objects within the specified datetime range",
             len(result_metrics_in_time),
         )
         return result_metrics_in_time

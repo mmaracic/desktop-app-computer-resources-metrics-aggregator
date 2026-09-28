@@ -7,6 +7,9 @@ from fastapi.testclient import TestClient
 
 from src.api.api import router
 from src.config.metric_config import MetricConfig
+from src.metric.model.component_type import ComponentType
+from src.metric.model.metric_metadata import MetricMetadata
+from src.metric.model.metric_type import MetricType
 from src.service.metrics_service import MetricsService
 
 
@@ -15,17 +18,13 @@ def test_get_metrics_by_datetime_range_with_mocked_disk_storage_and_no_azure_sto
 ):
     """Test the /metrics/range endpoint with disk storage mocked and Azure storage set to None, verifying filtering."""
     # File content has two metrics inside the range and one outside it
-    metadata = (
-        '{"metric_type": 2, "alias": "CPU Usage", '
-        '"description": "CPU usage percentage", "component_type": "cpu"}'
-    )
     file_content = (
-        f'{{"stored_at": "2026-09-19T12:00:00+00:00", '
-        f'"metrics": [{{"name": "cpu_usage", "value": 50.5, "metadata": {metadata}}}]}}\n'
-        f'{{"stored_at": "2026-09-19T23:59:59+00:00", '
-        f'"metrics": [{{"name": "cpu_usage", "value": 10.0, "metadata": {metadata}}}]}}\n'
-        f'{{"stored_at": "2026-09-20T00:00:01+00:00", '
-        f'"metrics": [{{"name": "cpu_usage", "value": 99.9, "metadata": {metadata}}}]}}\n'
+        '{"stored_at": "2026-09-19T12:00:00+00:00", '
+        '"metrics": [{"name": "cpu_usage", "value": 50.5}]}\n'
+        '{"stored_at": "2026-09-19T23:59:59+00:00", '
+        '"metrics": [{"name": "cpu_usage", "value": 10.0}]}\n'
+        '{"stored_at": "2026-09-20T00:00:01+00:00", '
+        '"metrics": [{"name": "cpu_usage", "value": 99.9}]}\n'
     )
 
     mock_disk_storage = MagicMock()
@@ -35,9 +34,22 @@ def test_get_metrics_by_datetime_range_with_mocked_disk_storage_and_no_azure_sto
 
     metrics_service = MetricsService(None, mock_disk_storage, "daily_metrics")
 
+    # Create mock metric metadata
+    mock_metric_metadata = {
+        "cpu_usage": MetricMetadata(
+            metric_type=MetricType.FLOAT,
+            alias="CPU Usage",
+            description="CPU usage percentage",
+            component_type=ComponentType.CPU,
+            warning_threshold=0.0,
+            critical_threshold=100.0,
+        )
+    }
+
     app = FastAPI()
     app.include_router(router)
     app.state.metrics_service = metrics_service
+    app.state.metric_metadata = mock_metric_metadata
     client = TestClient(app)
 
     response = client.get(
@@ -165,3 +177,145 @@ def test_store_metric_configs_empty_body() -> None:
 
     # Verify the reader/writer was NOT called (validation failed first)
     mock_reader_writer.write_configs.assert_not_called()
+
+
+def test_get_metric_metadata_success() -> None:
+    """Test GET /metrics/metadata returns all registered metric metadata."""
+    # Create mock metric metadata
+    mock_metric_metadata = {
+        "cpu_usage": MetricMetadata(
+            metric_type=MetricType.FLOAT,
+            alias="CPU Usage",
+            description="CPU usage percentage",
+            component_type=ComponentType.CPU,
+            warning_threshold=0.8,
+            critical_threshold=0.95,
+        ),
+        "gpu_temperature": MetricMetadata(
+            metric_type=MetricType.FLOAT,
+            alias="GPU Temperature",
+            description="GPU temperature in Celsius",
+            component_type=ComponentType.GPU,
+            warning_threshold=75.0,
+            critical_threshold=85.0,
+        ),
+    }
+
+    app = FastAPI()
+    app.include_router(router)
+    app.state.metric_metadata = mock_metric_metadata
+    client = TestClient(app)
+
+    response = client.get("/metrics/metadata")
+
+    assert response.status_code == 200
+    result = response.json()
+
+    # Verify the response is a list of dictionaries (Pydantic models are serialized)
+    assert isinstance(result, list)
+    assert len(result) == 2
+
+    # Verify CPU usage metadata - use alias since MetricMetadata doesn't have a name field
+    cpu_metadata = None
+    for item in result:
+        if isinstance(item, dict):
+            if item.get("alias") == "CPU Usage":
+                cpu_metadata = item
+                break
+        else:
+            # If it's an object, check its attributes
+            if hasattr(item, "alias") and item.alias == "CPU Usage":
+                cpu_metadata = (
+                    item.model_dump() if hasattr(item, "model_dump") else dict(item)
+                )
+                break
+
+    assert cpu_metadata is not None, "CPU usage metadata not found in response"
+    assert cpu_metadata["metric_type"] == "FLOAT"
+    assert cpu_metadata["alias"] == "CPU Usage"
+    assert cpu_metadata["description"] == "CPU usage percentage"
+    assert cpu_metadata["component_type"] == "CPU"
+    assert cpu_metadata["warning_threshold"] == 0.8
+    assert cpu_metadata["critical_threshold"] == 0.95
+
+    # Verify GPU temperature metadata - use alias since MetricMetadata doesn't have a name field
+    gpu_metadata = None
+    for item in result:
+        if isinstance(item, dict):
+            if item.get("alias") == "GPU Temperature":
+                gpu_metadata = item
+                break
+        else:
+            if hasattr(item, "alias") and item.alias == "GPU Temperature":
+                gpu_metadata = (
+                    item.model_dump() if hasattr(item, "model_dump") else dict(item)
+                )
+                break
+
+    assert gpu_metadata is not None, "GPU temperature metadata not found in response"
+    assert gpu_metadata["metric_type"] == "FLOAT"
+    assert gpu_metadata["alias"] == "GPU Temperature"
+    assert gpu_metadata["description"] == "GPU temperature in Celsius"
+    assert gpu_metadata["component_type"] == "GPU"
+    assert gpu_metadata["warning_threshold"] == 75.0
+    assert gpu_metadata["critical_threshold"] == 85.0
+
+
+def test_get_metric_metadata_empty() -> None:
+    """Test GET /metrics/metadata returns empty list when no metadata registered."""
+    app = FastAPI()
+    app.include_router(router)
+    app.state.metric_metadata = {}
+    client = TestClient(app)
+
+    response = client.get("/metrics/metadata")
+
+    assert response.status_code == 200
+    result = response.json()
+
+    # Verify empty list is returned
+    assert isinstance(result, list)
+    assert len(result) == 0
+
+
+def test_get_metric_metadata_consistency_with_metrics_data() -> None:
+    """Test that metadata endpoint returns consistent data structure for metrics."""
+    # Create mock metric metadata matching the MetricMetadata model
+    mock_metric_metadata = {
+        "cpu_usage": MetricMetadata(
+            metric_type=MetricType.FLOAT,
+            alias="CPU Usage",
+            description="CPU usage percentage",
+            component_type=ComponentType.CPU,
+            warning_threshold=0.8,
+            critical_threshold=0.95,
+        ),
+    }
+
+    app = FastAPI()
+    app.include_router(router)
+    app.state.metric_metadata = mock_metric_metadata
+    client = TestClient(app)
+
+    response = client.get("/metrics/metadata")
+
+    assert response.status_code == 200
+    result = response.json()
+
+    # Verify the response structure matches what frontend expects (MetricMetadata fields)
+    assert len(result) == 1
+    assert "metric_type" in result[0]
+    assert "alias" in result[0]
+    assert "description" in result[0]
+    assert "component_type" in result[0]
+    assert "warning_threshold" in result[0]
+    assert "critical_threshold" in result[0]
+
+    # Verify all required fields are present and have correct types
+    metadata = result[0]
+    assert isinstance(metadata["metric_type"], str)
+    assert isinstance(metadata["alias"], str)
+    assert isinstance(metadata["description"], str)
+    assert isinstance(metadata["component_type"], str)
+    assert isinstance(metadata["warning_threshold"], (int, float))
+    assert isinstance(metadata["critical_threshold"], (int, float))

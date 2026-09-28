@@ -4,6 +4,7 @@ from fastapi import APIRouter, HTTPException, Request
 
 from src.config.metric_config import MetricConfig
 from src.config.metric_config_reader_writer import MetricConfigReaderWriter
+from src.metric.model.metric_metadata import MetricMetadata
 from src.metric.model.metrics_in_time import MetricsInTime
 from src.service.metrics_service import MetricsService
 from src.service.utils_service import UtilsService
@@ -11,6 +12,7 @@ from src.service.utils_service import UtilsService
 # Error messages for consistency
 METRICS_SERVICE_NOT_INITIALIZED = "MetricsService not initialized"
 CONFIG_READER_WRITER_NOT_INITIALIZED = "Config reader/writer not initialized"
+METRIC_METADATA_NOT_INITIALIZED = "Metric metadata not initialized"
 
 router = APIRouter()
 
@@ -22,7 +24,7 @@ def get_metrics_by_datetime_range(
     request: Request,
     start_datetime: str,
     end_datetime: str,
-    container_name: str | None,
+    container_name: str | None = None,
 ) -> list[MetricsInTime]:
     """Retrieve metrics within a datetime range.
 
@@ -48,11 +50,18 @@ def get_metrics_by_datetime_range(
     """
     # Get storage service from app.state
     metrics_service: MetricsService = request.app.state.metrics_service
+    # Get metric metadata from app.state
+    metric_metadata: dict[str, MetricMetadata] = request.app.state.metric_metadata
 
     if metrics_service is None:
         raise HTTPException(
             status_code=500,
             detail=METRICS_SERVICE_NOT_INITIALIZED,
+        )
+    if metric_metadata is None:
+        raise HTTPException(
+            status_code=500,
+            detail=METRIC_METADATA_NOT_INITIALIZED,
         )
 
     # Parse datetime strings
@@ -60,19 +69,29 @@ def get_metrics_by_datetime_range(
         start_dt = UtilsService.parse_datetime_from_string(start_datetime)
         end_dt = UtilsService.parse_datetime_from_string(end_datetime)
     except ValueError as e:
-        raise ValueError(f"Invalid datetime format. Use ISO 8601 format: {e}") from e
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid datetime format. Use ISO 8601 format: {e}",
+        ) from e
 
     if start_dt > end_dt:
-        raise ValueError("start_datetime must be before or equal to end_datetime")
+        raise HTTPException(
+            status_code=400,
+            detail="start_datetime must be before or equal to end_datetime",
+        )
 
     try:
         return metrics_service.retrieve_metrics_by_datetime_range(
+            metric_metadata=metric_metadata,
             start_datetime=start_dt,
             end_datetime=end_dt,
             container_name=container_name,
         )
     except Exception as e:
-        raise RuntimeError(f"Error retrieving metrics: {e}") from e
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error retrieving metrics: {e}",
+        ) from e
 
 
 @router.get("/metrics/config")
@@ -152,3 +171,36 @@ def store_metric_configs(request: Request, body: list[MetricConfig]) -> None:
             status_code=500,
             detail=f"Error storing metric configurations: {e}",
         ) from e
+
+
+@router.get("/metrics/metadata")
+def get_metric_metadata(request: Request) -> list[dict[str, object]]:
+    """Retrieve all metric metadata.
+
+    Returns the complete metadata for all metrics, including type, thresholds, and descriptions.
+    This endpoint is designed to be called once and the results cached on the frontend,
+    then joined with metric data from /metrics/range using the "name" field, which matches
+    the raw metric name returned by /metrics/range.
+
+    Returns:
+        A list of metadata dicts, each including the raw metric "name" plus the MetricMetadata fields.
+
+    Raises:
+        HTTPException: If the metadata is not initialized.
+
+    """
+    # Get metric metadata from app.state
+    metric_metadata: dict[str, MetricMetadata] = request.app.state.metric_metadata
+
+    if metric_metadata is None:
+        raise HTTPException(
+            status_code=500,
+            detail=METRIC_METADATA_NOT_INITIALIZED,
+        )
+
+    # Include the raw metric name so the frontend can join this metadata with
+    # the name-only metrics returned by /metrics/range.
+    return [
+        {"name": name, **metadata.model_dump(mode="json")}
+        for name, metadata in metric_metadata.items()
+    ]
