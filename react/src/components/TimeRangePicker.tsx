@@ -10,6 +10,8 @@ interface TimeRangePickerProps {
     readonly onTimeRangeChange: (start: string, end: string) => void
 }
 
+type PresetDuration = '1h' | '3h' | '6h' | '12h' | '24h'
+
 // Backend expects full ISO 8601 with seconds and a UTC offset (e.g. 2026-09-28T00:31:00+02:00)
 const toISOWithOffset = (dateStr: string, timeStr: string): string => {
     if (!dateStr || !timeStr) return ''
@@ -28,6 +30,7 @@ export function TimeRangePicker({ onTimeRangeChange }: TimeRangePickerProps) {
     const [endDateTime, setEndDateTime] = useState<{ date: string; time: string }>({ date: '', time: '' })
     const [isPresentSelected, setIsPresentSelected] = useState(true)
     const [resetDisabled, setResetDisabled] = useState(true)
+    const [presetDuration, setPresetDuration] = useState<PresetDuration>('3h')
 
     const startDateRef = useRef<HTMLInputElement>(null)
     const startTimeRef = useRef<HTMLInputElement>(null)
@@ -36,10 +39,10 @@ export function TimeRangePicker({ onTimeRangeChange }: TimeRangePickerProps) {
 
     useEffect(() => {
         const now = new Date()
-        const twentyFourHoursAgo = subHours(now, 24)
+        const defaultHours = 3 // Default to 3 hours when preset is checked
 
-        const startDateObj = format(twentyFourHoursAgo, 'yyyy-MM-dd')
-        const startTime = format(twentyFourHoursAgo, 'HH:mm')
+        const startDateObj = format(subHours(now, defaultHours), 'yyyy-MM-dd')
+        const startTime = format(subHours(now, defaultHours), 'HH:mm')
         const endDateObj = format(now, 'yyyy-MM-dd')
         const endTime = format(now, 'HH:mm')
 
@@ -47,17 +50,21 @@ export function TimeRangePicker({ onTimeRangeChange }: TimeRangePickerProps) {
         setEndDateTime({ date: endDateObj, time: endTime })
         setIsPresentSelected(true)
         setResetDisabled(true)
+        setPresetDuration('3h')
     }, [])
 
     useEffect(() => {
         if (isPresentSelected) {
             const now = new Date()
-            const twentyFourHoursAgo = subHours(now, 24)
-
-            const startDateObj = format(twentyFourHoursAgo, 'yyyy-MM-dd')
-            const startTime = format(twentyFourHoursAgo, 'HH:mm')
+            const hours = Number.parseInt(presetDuration.replace('h', ''), 10)
+            const startDateObj = format(subHours(now, hours), 'yyyy-MM-dd')
+            const startTime = format(subHours(now, hours), 'HH:mm')
             const endDateObj = format(now, 'yyyy-MM-dd')
             const endTime = format(now, 'HH:mm')
+
+            // Update start date and time inputs when preset changes
+            setStartDateTime({ date: startDateObj, time: startTime })
+            setEndDateTime({ date: endDateObj, time: endTime })
 
             // Only call onTimeRangeChange without updating local state to avoid infinite loop
             onTimeRangeChange(
@@ -69,7 +76,7 @@ export function TimeRangePicker({ onTimeRangeChange }: TimeRangePickerProps) {
             const combinedEnd = endDateTime.date && endDateTime.time ? toISOWithOffset(endDateTime.date, endDateTime.time) : endDate
             onTimeRangeChange(combinedStart, combinedEnd)
         }
-    }, [isPresentSelected, startDateTime, endDateTime, startDate, endDate, onTimeRangeChange])
+    }, [isPresentSelected, presetDuration, startDateTime, endDateTime, startDate, endDate, onTimeRangeChange])
 
     const handleReset = () => {
         const now = new Date()
@@ -130,6 +137,11 @@ export function TimeRangePicker({ onTimeRangeChange }: TimeRangePickerProps) {
     const handlePresentChange = () => {
         setIsPresentSelected(!isPresentSelected)
         setResetDisabled(false)
+    }
+
+    const handlePresetChange = (duration: PresetDuration) => {
+        setPresetDuration(duration)
+        setResetDisabled(true)
     }
 
     return (
@@ -198,17 +210,38 @@ export function TimeRangePicker({ onTimeRangeChange }: TimeRangePickerProps) {
                     onCheckedChange={handlePresentChange}
                 />
                 <Label htmlFor="present" className="cursor-pointer font-normal">
-                    Show Present (Last 24 hours)
+                    Show Present
                 </Label>
             </div>
 
+            {isPresentSelected && (
+                <div className="space-y-2">
+                    <Label htmlFor="preset-duration" className="text-xs">
+                        Time Range:
+                    </Label>
+                    <select
+                        id="preset-duration"
+                        value={presetDuration}
+                        onChange={(e) => handlePresetChange(e.target.value as PresetDuration)}
+                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                        <option value="1h">Last 1 hour</option>
+                        <option value="3h">Last 3 hours</option>
+                        <option value="6h">Last 6 hours</option>
+                        <option value="12h">Last 12 hours</option>
+                        <option value="24h">Last 24 hours</option>
+                    </select>
+                </div>
+            )}
+
             <Separator />
 
-            {isPresentSelected ? (
-                <p className="text-sm text-muted-foreground">Showing the last 24 hours of data</p>
-            ) : startDate && endDate ? (
-                <TimeRangeDescription startDate={startDate} endDate={endDate} />
-            ) : null}
+            {isPresentSelected && (
+                <p className="text-sm text-muted-foreground">
+                    Showing the last {Number.parseInt(presetDuration.replace('h', ''), 10)} hour{Number.parseInt(presetDuration.replace('h', ''), 10) === 1 ? '' : 's'} of data
+                </p>
+            )}
+            {!isPresentSelected && startDate && endDate && <TimeRangeDescription startDate={startDate} endDate={endDate} />}
         </div>
     )
 }
