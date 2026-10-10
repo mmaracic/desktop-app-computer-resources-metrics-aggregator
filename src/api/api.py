@@ -1,13 +1,19 @@
 """This module defines the API routes for the FastAPI application."""
 
+import logging
+
 from fastapi import APIRouter, HTTPException, Request
 
 from src.config.metric_config import MetricConfig
 from src.config.metric_config_reader_writer import MetricConfigReaderWriter
 from src.metric.model.metric_metadata import MetricMetadata
 from src.metric.model.metrics_in_time import MetricsInTime
+from src.samplers.metric_sampler import MetricSampler
+from src.samplers.uniform_metric_sampler import UniformMetricSampler
 from src.service.metrics_service import MetricsService
 from src.service.utils_service import UtilsService
+
+logger = logging.getLogger(__name__)
 
 # Error messages for consistency
 METRICS_SERVICE_NOT_INITIALIZED = "MetricsService not initialized"
@@ -24,6 +30,7 @@ def get_metrics_by_datetime_range(
     request: Request,
     start_datetime: str,
     end_datetime: str,
+    bucket_count: int = 100,
     container_name: str | None = None,
 ) -> list[MetricsInTime]:
     """Retrieve metrics within a datetime range.
@@ -52,6 +59,7 @@ def get_metrics_by_datetime_range(
     metrics_service: MetricsService = request.app.state.metrics_service
     # Get metric metadata from app.state
     metric_metadata: dict[str, MetricMetadata] = request.app.state.metric_metadata
+    sampler: MetricSampler = UniformMetricSampler()
 
     if metrics_service is None:
         raise HTTPException(
@@ -81,17 +89,28 @@ def get_metrics_by_datetime_range(
         )
 
     try:
-        return metrics_service.retrieve_metrics_by_datetime_range(
+        extracted_metrics = metrics_service.retrieve_metrics_by_datetime_range(
             metric_metadata=metric_metadata,
             start_datetime=start_dt,
             end_datetime=end_dt,
             container_name=container_name,
         )
+        sampled_metrics = sampler.sample(
+            extracted_metrics,
+            start_dt,
+            end_dt,
+            bucket_count=bucket_count,
+        )
     except Exception as e:
+        logger.exception(f"Error retrieving metrics: {e}")
         raise HTTPException(
             status_code=500,
             detail=f"Error retrieving metrics: {e}",
         ) from e
+    logger.info(
+        f"Retrieved {len(extracted_metrics)} and sampled {len(sampled_metrics)} metrics from {start_dt} to {end_dt}"
+    )
+    return sampled_metrics
 
 
 @router.get("/metrics/config")

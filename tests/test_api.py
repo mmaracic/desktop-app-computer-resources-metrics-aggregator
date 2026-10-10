@@ -58,6 +58,7 @@ def test_get_metrics_by_datetime_range_with_mocked_disk_storage_and_no_azure_sto
             "start_datetime": "2026-09-19T00:00:00.000000+00:00",
             "end_datetime": "2026-09-19T23:59:59.000000+00:00",
             "container_name": None,
+            "bucket_count": 24,  # Use 24 buckets (~1 hour each) to keep metrics at 12:00 and 23:59 in separate buckets
         },
     )
 
@@ -68,6 +69,7 @@ def test_get_metrics_by_datetime_range_with_mocked_disk_storage_and_no_azure_sto
     mock_disk_storage.read_file.assert_called_once()
 
     # Only the two metrics within the range should be returned, the one after end_datetime is excluded
+    # bucket_count=24 ensures metrics at 12:00 and 23:59 fall into different buckets (each ~1 hour)
     assert len(result) == 2
     assert result[0]["metrics"][0]["value"] == 50.5
     assert result[1]["metrics"][0]["value"] == 10.0
