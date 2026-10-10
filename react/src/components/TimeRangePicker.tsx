@@ -53,6 +53,11 @@ export function TimeRangePicker({ onTimeRangeChange }: TimeRangePickerProps) {
         setPresetDuration('3h')
     }, [])
 
+    const onChangeRef = useRef(onTimeRangeChange)
+    useEffect(() => {
+        onChangeRef.current = onTimeRangeChange
+    })
+
     useEffect(() => {
         if (isPresentSelected) {
             const now = new Date()
@@ -66,17 +71,18 @@ export function TimeRangePicker({ onTimeRangeChange }: TimeRangePickerProps) {
             setStartDateTime({ date: startDateObj, time: startTime })
             setEndDateTime({ date: endDateObj, time: endTime })
 
-            // Only call onTimeRangeChange without updating local state to avoid infinite loop
-            onTimeRangeChange(
+            onChangeRef.current(
                 toISOWithOffset(startDateObj, startTime),
                 toISOWithOffset(endDateObj, endTime)
             )
         } else {
             const combinedStart = startDateTime.date && startDateTime.time ? toISOWithOffset(startDateTime.date, startDateTime.time) : startDate
             const combinedEnd = endDateTime.date && endDateTime.time ? toISOWithOffset(endDateTime.date, endDateTime.time) : endDate
-            onTimeRangeChange(combinedStart, combinedEnd)
+            onChangeRef.current(combinedStart, combinedEnd)
         }
-    }, [isPresentSelected, presetDuration, startDateTime, endDateTime, startDate, endDate, onTimeRangeChange])
+        // Preset mode sets startDateTime/endDateTime itself, so they must not retrigger it
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isPresentSelected, presetDuration, isPresentSelected ? null : startDateTime, isPresentSelected ? null : endDateTime, startDate, endDate])
 
     const handleReset = () => {
         const now = new Date()
@@ -236,11 +242,6 @@ export function TimeRangePicker({ onTimeRangeChange }: TimeRangePickerProps) {
 
             <Separator />
 
-            {isPresentSelected && (
-                <p className="text-sm text-muted-foreground">
-                    Showing the last {Number.parseInt(presetDuration.replace('h', ''), 10)} hour{Number.parseInt(presetDuration.replace('h', ''), 10) === 1 ? '' : 's'} of data
-                </p>
-            )}
             {!isPresentSelected && startDate && endDate && <TimeRangeDescription startDate={startDate} endDate={endDate} />}
         </div>
     )

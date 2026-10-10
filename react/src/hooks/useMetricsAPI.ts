@@ -32,7 +32,8 @@ export const useMetricsAPI = () => {
     const getMetricsByRange = async (
         startDatetime: string,
         endDatetime: string,
-        containerName?: string
+        containerName?: string,
+        bucketCount: number = 100
     ): Promise<MetricData[]> => {
         console.log('📡 [useMetricsAPI] Calling /api/metrics/range')
         console.log('   Params:', { start_datetime: startDatetime, end_datetime: endDatetime, container_name: containerName })
@@ -43,6 +44,7 @@ export const useMetricsAPI = () => {
                     params: {
                         start_datetime: startDatetime,
                         end_datetime: endDatetime,
+                        bucket_count: bucketCount,
                         ...(containerName && { container_name: containerName }),
                     },
                 }

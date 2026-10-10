@@ -42,8 +42,8 @@ export function MetricPopup({ isOpen, onClose, timestamp, metrics }: PopupProps)
                 </div>
 
                 <div className="space-y-2 max-h-[400px] overflow-y-auto">
-                    {metrics.map((metric) => (
-                        <div key={metric.name} className="flex items-center justify-between p-3 rounded-lg border">
+                    {metrics.map((metric, index) => (
+                        <div key={`${metric.name}-${index}`} className="flex items-center justify-between p-3 rounded-lg border">
                             <div className="flex items-center gap-2">
                                 <Badge variant="outline" className="text-xs">
                                     {metric.name}

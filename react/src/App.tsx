@@ -17,11 +17,28 @@ function App() {
   const [selectedTimestamp, setSelectedTimestamp] = useState<string | null>(null)
   const [selectedMetrics, setSelectedMetrics] = useState<Array<{ name: string; value: number | string }>>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState<'graph' | 'config'>('graph')
+  const [theme, setTheme] = useState<'system' | 'light' | 'dark'>(
+    () => (localStorage.getItem('theme') as 'system' | 'light' | 'dark') || 'system'
+  )
+
+  useEffect(() => {
+    localStorage.setItem('theme', theme)
+    const media = window.matchMedia('(prefers-color-scheme: dark)')
+    const apply = () => {
+      const dark = theme === 'dark' || (theme === 'system' && media.matches)
+      document.documentElement.classList.toggle('dark', dark)
+    }
+    apply()
+    media.addEventListener('change', apply)
+    return () => media.removeEventListener('change', apply)
+  }, [theme])
   const [error, setError] = useState<string | null>(null)
 
   // Time range state
   const [currentStartDate, setCurrentStartDate] = useState<string>('')
   const [currentEndDate, setCurrentEndDate] = useState<string>('')
+  const [bucketCount, setBucketCount] = useState<number>(100)
 
   // Time range formatting helper
   const formatISOWithTZ = (date: Date): string => {
@@ -69,7 +86,7 @@ function App() {
         console.log('   Sample metrics:', metricsList.slice(0, 3))
         setAvailableMetrics(metricsList)
 
-        const rawMetricsData = await getMetricsByRange(startDatetime, endDatetime)
+        const rawMetricsData = await getMetricsByRange(startDatetime, endDatetime, undefined, bucketCount)
         console.log('✅ Received raw metrics data:', rawMetricsData.length, 'batches')
         if (rawMetricsData.length > 0) {
           console.log('   First batch has', rawMetricsData[0].metrics.length, 'metrics')
@@ -97,7 +114,7 @@ function App() {
     }
 
     fetchData()
-  }, [currentStartDate, currentEndDate])
+  }, [currentStartDate, currentEndDate, bucketCount])
 
   // Fetch configurations on mount
   useEffect(() => {
@@ -218,50 +235,86 @@ function App() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="container mx-auto p-6 space-y-6">
-        <h1 className="text-3xl font-bold mb-6">Computer Resources Metrics</h1>
+      <div className="w-full p-6 space-y-6">
+        <div className="flex gap-2 border-b">
+          {([['graph', 'Graph'], ['config', 'Configuration']] as const).map(([key, label]) => (
+            <button
+              key={key}
+              onClick={() => setActiveTab(key)}
+              className={`px-4 py-2 -mb-px border-b-2 font-medium ${activeTab === key ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'
+                }`}
+            >
+              {label}
+            </button>
+          ))}
+          <select
+            value={theme}
+            onChange={(e) => setTheme(e.target.value as 'system' | 'light' | 'dark')}
+            className="ml-auto mb-1 rounded-md border bg-background text-foreground px-2 text-sm"
+            aria-label="Theme"
+          >
+            <option value="system">System</option>
+            <option value="light">Light</option>
+            <option value="dark">Dark</option>
+          </select>
+        </div>
 
-        {/* Time Range Section */}
-        <Card className="p-6">
-          <TimeRangePicker onTimeRangeChange={(start, end) => {
-            setCurrentStartDate(start)
-            setCurrentEndDate(end)
-          }} />
-        </Card>
-
-        {/* Graph Section */}
-        <Card className="p-6">
-          <div className="mb-4">
-            <h2 className="text-xl font-semibold">Metrics Visualization</h2>
-            <p className="text-sm text-muted-foreground mt-1">
-              Click on any point in the graph to see detailed values
-            </p>
-          </div>
-
-          {isLoading ? (
-            <div className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+        {activeTab === 'graph' && (<>
+          {/* Time Range Section */}
+          <Card className="p-6">
+            <div className="mb-4 flex items-center gap-2 text-sm">
+              <label htmlFor="bucket-count">Bucket count</label>
+              <select
+                id="bucket-count"
+                value={bucketCount}
+                onChange={(e) => setBucketCount(Number(e.target.value))}
+                className="rounded-md border bg-background text-foreground px-2 py-1"
+              >
+                {[100, 250, 500, 1000].map((n) => (
+                  <option key={n} value={n}>{n}</option>
+                ))}
+              </select>
             </div>
-          ) : series.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              {error || 'No data available for the selected time range'}
+            <TimeRangePicker onTimeRangeChange={(start, end) => {
+              setCurrentStartDate(start)
+              setCurrentEndDate(end)
+            }} />
+          </Card>
+
+          {/* Graph Section */}
+          <Card className="p-6">
+            <div className="mb-4">
+              <p className="text-sm text-muted-foreground">
+                Click on any point in the graph to see detailed values
+              </p>
             </div>
-          ) : null}
 
-          {!isLoading && series.length > 0 && (
-            <MetricsGraph series={series} onClickTimePoint={handleTimePointClick} />
-          )}
-        </Card>
+            {isLoading ? (
+              <div className="flex items-center justify-center h-64">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : series.length === 0 ? (
+              <div className="text-center py-8 text-muted-foreground">
+                {error || 'No data available for the selected time range'}
+              </div>
+            ) : null}
 
-        {/* Configuration Section */}
-        <Card className="p-6">
-          <ConfigurationSection
-            configs={effectiveConfigs}
-            onChange={setConfigs}
-            onSave={handleConfigSave}
-            availableMetrics={availableMetrics}
-          />
-        </Card>
+            {!isLoading && series.length > 0 && (
+              <MetricsGraph series={series} onClickTimePoint={handleTimePointClick} />
+            )}
+          </Card>
+        </>)}
+
+        {activeTab === 'config' && (
+          <Card className="p-6">
+            <ConfigurationSection
+              configs={effectiveConfigs}
+              onChange={setConfigs}
+              onSave={handleConfigSave}
+              availableMetrics={availableMetrics}
+            />
+          </Card>
+        )}
 
         {/* Popup for selected time point */}
         {selectedTimestamp && (

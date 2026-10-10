@@ -120,8 +120,8 @@ export function ConfigurationSection({ configs, onChange, onSave, availableMetri
 
                 {/* Metrics list - each metric gets its own card, scrolls after ~10 items */}
                 <div className="space-y-3 max-h-[640px] overflow-y-auto pr-1">
-                    {displayMetrics.map((config) => (
-                        <Card key={config.name} className="p-4 border-l-4" style={{ borderLeftColor: config.color }}>
+                    {displayMetrics.map((config, index) => (
+                        <Card key={`${config.name}-${index}`} className="p-4 border-l-4" style={{ borderLeftColor: config.color }}>
                             <div className="flex items-center gap-4">
                                 {/* Enable/Disable Checkbox */}
                                 <div className="flex items-center gap-2">
