@@ -216,7 +216,7 @@ async def fetch_metrics_periodically(
             metric_registry.extract_metrics()
             await asyncio.sleep(env_config.metric_refresh_interval)
     except Exception as e:
-        logger.error("Error occurred in background metric fetching task: %s", e)  # noqa: TRY400
+        logger.exception("Error occurred in background metric fetching task: %s", e)  # noqa: TRY400
 
 
 app = FastAPI(lifespan=lifespan)

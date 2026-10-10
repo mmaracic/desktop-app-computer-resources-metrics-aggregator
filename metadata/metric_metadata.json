@@ -1,6 +1,7 @@
 {
     "card0_gpu_busy_percent": {
         "metric_type": "FLOAT",
+        "minimal_delta": 0.5,
         "alias": "GPU 0 utilization percentage",
         "description": "Shows how much the GPU is actively processing graphics workloads",
         "component_type": "GPU",
@@ -9,6 +10,7 @@
     },
     "card1_gpu_busy_percent": {
         "metric_type": "FLOAT",
+        "minimal_delta": 0.5,
         "alias": "GPU 1 utilization percentage",
         "description": "Shows how much the GPU is actively processing graphics workloads",
         "component_type": "GPU",
@@ -17,6 +19,7 @@
     },
     "card0_gtt_utilization_percent": {
         "metric_type": "FLOAT",
+        "minimal_delta": 0.5,
         "alias": "GPU 0 shared graphics memory usage percentage",
         "description": "Tracks usage of system RAM allocated for GPU operations",
         "component_type": "GPU",
@@ -25,6 +28,7 @@
     },
     "card1_gtt_utilization_percent": {
         "metric_type": "FLOAT",
+        "minimal_delta": 0.5,
         "alias": "GPU 1 shared graphics memory usage percentage",
         "description": "Tracks usage of system RAM allocated for GPU operations",
         "component_type": "GPU",
@@ -33,6 +37,7 @@
     },
     "card0_gpu_clock_mhz": {
         "metric_type": "INTEGER",
+        "minimal_delta": 1,
         "alias": "GPU 0 current clock frequency in MHz",
         "description": "Indicates the GPU's operating speed for graphics processing",
         "component_type": "GPU",
@@ -41,6 +46,7 @@
     },
     "card1_gpu_clock_mhz": {
         "metric_type": "INTEGER",
+        "minimal_delta": 1,
         "alias": "GPU 1 current clock frequency in MHz",
         "description": "Indicates the GPU's operating speed for graphics processing",
         "component_type": "GPU",
@@ -49,6 +55,7 @@
     },
     "card0_gpu_power_milliwatts": {
         "metric_type": "INTEGER",
+        "minimal_delta": 1,
         "alias": "GPU 0 current power consumption in mW",
         "description": "Shows how much electrical power the GPU is currently using",
         "component_type": "GPU",
@@ -57,6 +64,7 @@
     },
     "card1_gpu_power_milliwatts": {
         "metric_type": "INTEGER",
+        "minimal_delta": 1,
         "alias": "GPU 1 current power consumption in mW",
         "description": "Shows how much electrical power the GPU is currently using",
         "component_type": "GPU",
@@ -65,6 +73,7 @@
     },
     "card0_gpu_memory_clock_mhz": {
         "metric_type": "INTEGER",
+        "minimal_delta": 1,
         "alias": "GPU 0 memory clock frequency in MHz",
         "description": "Indicates the speed of GPU video memory operations",
         "component_type": "GPU",
@@ -73,6 +82,7 @@
     },
     "card1_gpu_memory_clock_mhz": {
         "metric_type": "INTEGER",
+        "minimal_delta": 1,
         "alias": "GPU 1 memory clock frequency in MHz",
         "description": "Indicates the speed of GPU video memory operations",
         "component_type": "GPU",
@@ -81,6 +91,7 @@
     },
     "cpu_usage_percent": {
         "metric_type": "FLOAT",
+        "minimal_delta": 0.5,
         "alias": "Overall CPU utilization percentage",
         "description": "Shows how much CPU capacity is currently being used across all processors",
         "component_type": "CPU",
@@ -89,6 +100,7 @@
     },
     "cpu_count_logical": {
         "metric_type": "INTEGER",
+        "minimal_delta": 1,
         "alias": "Total number of logical CPU cores",
         "description": "Indicates the total count of logical processors available in the system",
         "component_type": "CPU",
@@ -97,6 +109,7 @@
     },
     "memory_total_bytes": {
         "metric_type": "INTEGER",
+        "minimal_delta": 1,
         "alias": "Total system memory in bytes",
         "description": "Indicates the total amount of physical memory installed in the system",
         "component_type": "RAM",
@@ -105,6 +118,7 @@
     },
     "memory_used_bytes": {
         "metric_type": "INTEGER",
+        "minimal_delta": 1,
         "alias": "Used system memory in bytes",
         "description": "Shows the amount of memory currently being used by processes and kernel",
         "component_type": "RAM",
@@ -113,6 +127,7 @@
     },
     "memory_free_bytes": {
         "metric_type": "INTEGER",
+        "minimal_delta": 1,
         "alias": "Free system memory in bytes",
         "description": "Indicates the amount of memory that is completely unused",
         "component_type": "RAM",
@@ -121,6 +136,7 @@
     },
     "memory_active_bytes": {
         "metric_type": "INTEGER",
+        "minimal_delta": 1,
         "alias": "Active memory in bytes",
         "description": "Shows memory that is actively being used by processes",
         "component_type": "RAM",
@@ -129,6 +145,7 @@
     },
     "memory_inactive_bytes": {
         "metric_type": "INTEGER",
+        "minimal_delta": 1,
         "alias": "Inactive memory in bytes",
         "description": "Indicates memory that is available for immediate reuse",
         "component_type": "RAM",
@@ -137,6 +154,7 @@
     },
     "memory_buffers_bytes": {
         "metric_type": "INTEGER",
+        "minimal_delta": 1,
         "alias": "Buffer memory in bytes",
         "description": "Shows memory used for I/O buffers",
         "component_type": "RAM",
@@ -145,6 +163,7 @@
     },
     "memory_cached_bytes": {
         "metric_type": "INTEGER",
+        "minimal_delta": 1,
         "alias": "Cached memory in bytes",
         "description": "Indicates memory used for file system cache",
         "component_type": "RAM",
@@ -153,6 +172,7 @@
     },
     "memory_shared_bytes": {
         "metric_type": "INTEGER",
+        "minimal_delta": 1,
         "alias": "Shared memory in bytes",
         "description": "Shows memory that is shared between processes",
         "component_type": "RAM",
@@ -161,6 +181,7 @@
     },
     "memory_slab_bytes": {
         "metric_type": "INTEGER",
+        "minimal_delta": 1,
         "alias": "Slab memory in bytes",
         "description": "Indicates kernel data structure cache memory",
         "component_type": "RAM",
@@ -169,6 +190,7 @@
     },
     "memory_usage_percent": {
         "metric_type": "FLOAT",
+        "minimal_delta": 0.5,
         "alias": "System RAM utilization percentage",
         "description": "Indicates how much of the available memory is currently in use",
         "component_type": "RAM",
@@ -177,6 +199,7 @@
     },
     "disk_usage_percent": {
         "metric_type": "FLOAT",
+        "minimal_delta": 0.5,
         "alias": "Root filesystem disk usage percentage",
         "description": "Shows how much of the system drive is occupied with data and applications",
         "component_type": "DISK",
@@ -185,6 +208,7 @@
     },
     "cpu_frequency_mhz": {
         "metric_type": "INTEGER",
+        "minimal_delta": 1,
         "alias": "Current CPU operating frequency in MHz",
         "description": "Indicates the actual speed at which the processor is running",
         "component_type": "CPU",
@@ -193,6 +217,7 @@
     },
     "cpu_context_switches_voluntary": {
         "metric_type": "INTEGER",
+        "minimal_delta": 1,
         "alias": "Total voluntary context switches",
         "description": "Counts CPU task switches when processes voluntarily yield control",
         "component_type": "CPU",
@@ -201,6 +226,7 @@
     },
     "cpu_interrupts": {
         "metric_type": "INTEGER",
+        "minimal_delta": 1,
         "alias": "Total involuntary context switches",
         "description": "Counts CPU task switches forced by the system due to resource constraints",
         "component_type": "CPU",
@@ -209,6 +235,7 @@
     },
     "memory_available_mb": {
         "metric_type": "INTEGER",
+        "minimal_delta": 1,
         "alias": "Available system memory in MB",
         "description": "Shows how much RAM is currently free for new applications and processes",
         "component_type": "RAM",
@@ -217,6 +244,7 @@
     },
     "swap_usage_percent": {
         "metric_type": "FLOAT",
+        "minimal_delta": 0.5,
         "alias": "Swap space utilization percentage",
         "description": "Indicates how much of the virtual memory (page file/swap) is currently in use",
         "component_type": "RAM",
@@ -225,6 +253,7 @@
     },
     "swap_used_mb": {
         "metric_type": "INTEGER",
+        "minimal_delta": 1,
         "alias": "Used swap space in MB",
         "description": "Shows the amount of virtual memory currently being used on disk",
         "component_type": "RAM",
@@ -233,6 +262,7 @@
     },
     "network_bytes_sent": {
         "metric_type": "INTEGER",
+        "minimal_delta": 1,
         "alias": "Total network bytes transmitted",
         "description": "Cumulative count of data sent out through all network interfaces",
         "component_type": "NETWORK",
@@ -241,6 +271,7 @@
     },
     "network_bytes_received": {
         "metric_type": "INTEGER",
+        "minimal_delta": 1,
         "alias": "Total network bytes received",
         "description": "Cumulative count of data received through all network interfaces",
         "component_type": "NETWORK",
@@ -249,6 +280,7 @@
     },
     "disk_read_count": {
         "metric_type": "INTEGER",
+        "minimal_delta": 1,
         "alias": "Total disk read operations",
         "description": "Counts the number of times data has been read from the storage device",
         "component_type": "DISK",
@@ -257,6 +289,7 @@
     },
     "disk_write_count": {
         "metric_type": "INTEGER",
+        "minimal_delta": 1,
         "alias": "Total disk write operations",
         "description": "Counts the number of times data has been written to the storage device",
         "component_type": "DISK",
@@ -265,6 +298,7 @@
     },
     "disk_read_bytes": {
         "metric_type": "INTEGER",
+        "minimal_delta": 1,
         "alias": "Total bytes read from disk",
         "description": "Cumulative number of bytes read from all storage devices",
         "component_type": "DISK",
@@ -273,6 +307,7 @@
     },
     "disk_write_bytes": {
         "metric_type": "INTEGER",
+        "minimal_delta": 1,
         "alias": "Total bytes written to disk",
         "description": "Cumulative number of bytes written to all storage devices",
         "component_type": "DISK",
@@ -281,6 +316,7 @@
     },
     "disk_read_time_ms": {
         "metric_type": "INTEGER",
+        "minimal_delta": 1,
         "alias": "Total disk read time in milliseconds",
         "description": "Cumulative time spent reading data from all storage devices",
         "component_type": "DISK",
@@ -289,6 +325,7 @@
     },
     "disk_write_time_ms": {
         "metric_type": "INTEGER",
+        "minimal_delta": 1,
         "alias": "Total disk write time in milliseconds",
         "description": "Cumulative time spent writing data to all storage devices",
         "component_type": "DISK",
@@ -297,6 +334,7 @@
     },
     "fan_speed_amdgpu": {
         "metric_type": "INTEGER",
+        "minimal_delta": 1,
         "alias": "GPU fan speed - rotational speed of the graphics card cooling fan in RPM",
         "description": "Fan speed reading from amdgpu sensor",
         "component_type": "GPU",
@@ -304,7 +342,8 @@
         "critical_threshold": 6000
     },
     "top_process_1": {
-        "metric_type": "STRING",
+        "metric_type": "DICT",
+        "minimal_delta": 1,
         "alias": "Top CPU and memory consuming process 1",
         "description": "The process currently consuming the most CPU and/or memory resources",
         "component_type": "PROCESS",
@@ -312,7 +351,8 @@
         "critical_threshold": null
     },
     "top_process_2": {
-        "metric_type": "STRING",
+        "metric_type": "DICT",
+        "minimal_delta": 1,
         "alias": "Top CPU and memory consuming process 2",
         "description": "The process currently consuming the most CPU and/or memory resources",
         "component_type": "PROCESS",
@@ -320,7 +360,8 @@
         "critical_threshold": null
     },
     "top_process_3": {
-        "metric_type": "STRING",
+        "metric_type": "DICT",
+        "minimal_delta": 1,
         "alias": "Top CPU and memory consuming process 3",
         "description": "The process currently consuming the most CPU and/or memory resources",
         "component_type": "PROCESS",
@@ -328,7 +369,8 @@
         "critical_threshold": null
     },
     "top_process_4": {
-        "metric_type": "STRING",
+        "metric_type": "DICT",
+        "minimal_delta": 1,
         "alias": "Top CPU and memory consuming process 4",
         "description": "The process currently consuming the most CPU and/or memory resources",
         "component_type": "PROCESS",
@@ -336,7 +378,8 @@
         "critical_threshold": null
     },
     "top_process_5": {
-        "metric_type": "STRING",
+        "metric_type": "DICT",
+        "minimal_delta": 1,
         "alias": "Top CPU and memory consuming process 5",
         "description": "The process currently consuming the most CPU and/or memory resources",
         "component_type": "PROCESS",

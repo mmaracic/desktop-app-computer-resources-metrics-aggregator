@@ -28,6 +28,7 @@ class MetadataReader:
         return {
             name: MetricMetadata(
                 metric_type=MetricType[entry["metric_type"]],
+                minimal_delta=entry.get("minimal_delta"),
                 warning_threshold=entry.get("warning_threshold"),
                 critical_threshold=entry.get("critical_threshold"),
                 alias=entry["alias"],

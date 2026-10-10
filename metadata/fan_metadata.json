@@ -1,6 +1,7 @@
 {
     "fan_speed_amdgpu": {
         "metric_type": "INTEGER",
+        "minimal_delta": 100,
         "alias": "GPU fan speed",
         "description": "Rotational speed of the graphics card cooling fan in RPM",
         "component_type": "GPU",

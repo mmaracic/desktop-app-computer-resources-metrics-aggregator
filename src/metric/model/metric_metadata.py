@@ -23,6 +23,7 @@ class MetricMetadata(BaseModel):
     alias: str
     description: str
     component_type: ComponentType
+    minimal_delta: Any | None = Field(default=None)
     warning_threshold: Any | None = Field(default=None)
     critical_threshold: Any | None = Field(default=None)
 

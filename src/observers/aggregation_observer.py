@@ -3,13 +3,15 @@ from typing import Any
 
 from src.metric.metric_observer import MetricObserver
 from src.metric.metric_updater import MetricUpdater
+from src.metric.model.metric_type import MetricType
 from src.metric.model.metrics_in_time import MetricsInTime
 
 logger = logging.getLogger(__name__)
 
 
 class AggregationObserver(MetricObserver):
-    """Observer that keeps track of metrics and emits forward only updates that have changed."""
+    """Observer that keeps track of metrics and emits forward only updates that
+have changed."""
 
     def __init__(self, metric_updaters: list[MetricUpdater]) -> None:
         super().__init__()
@@ -18,11 +20,18 @@ class AggregationObserver(MetricObserver):
 
     def update(self, metrics_in_time: MetricsInTime) -> None:
         """Update the observer with new metrics, emitting only changes."""
-        changed_metrics = [
-            metric
-            for metric in metrics_in_time.metrics
-            if self._last_metrics.get(metric.name) != metric.value
+        metrics_with_value = [
+            metric for metric in metrics_in_time.metrics if metric.value is not
+None
         ]
+        changed_metrics = []
+        for metric in metrics_with_value:
+            if metric.metadata.metric_type == MetricType.DICT:
+                if self._dict_metric_changed(metric):
+                    changed_metrics.append(metric)
+            elif self._value_metric_changed(metric):
+                    changed_metrics.append(metric)
+        
         if changed_metrics:
             logger.info("Detected changed metrics: %d", len(changed_metrics))
             self._last_metrics.update(
@@ -31,8 +40,22 @@ class AggregationObserver(MetricObserver):
             for updater in self._metric_updaters:
                 updater.update(
                     MetricsInTime(
-                        stored_at=metrics_in_time.stored_at, metrics=changed_metrics,
+                        stored_at=metrics_in_time.stored_at,
+                        metrics=changed_metrics,
                     ),
                 )
         else:
             logger.info("No changed metrics detected")
+
+    def _value_metric_changed(self, metric) -> bool:
+        return self._last_metrics.get(metric.name) is None or (
+            self._last_metrics.get(metric.name) is not None
+            and abs(self._last_metrics.get(metric.name) - metric.value)
+            >= (metric.metadata.minimal_delta)
+        )
+
+    def _dict_metric_changed(self, metric) -> bool:
+        return self._last_metrics.get(metric.name) is None or (
+            self._last_metrics.get(metric.name) is not None
+            and self._last_metrics.get(metric.name) != metric.value
+        )
