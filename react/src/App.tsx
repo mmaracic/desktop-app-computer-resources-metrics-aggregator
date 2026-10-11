@@ -15,7 +15,7 @@ function App() {
   const [configs, setConfigs] = useState<MetricConfig[]>([])
   const [availableMetrics, setAvailableMetrics] = useState<Array<{ name: string; description?: string }>>([])
   const [selectedTimestamp, setSelectedTimestamp] = useState<string | null>(null)
-  const [selectedMetrics, setSelectedMetrics] = useState<Array<{ name: string; value: number | string }>>([])
+  const [selectedMetrics, setSelectedMetrics] = useState<Array<{ name: string; value: unknown; description?: string; componentType?: string }>>([])
   const [isLoading, setIsLoading] = useState(true)
   const [activeTab, setActiveTab] = useState<'graph' | 'config'>('graph')
   const [theme, setTheme] = useState<'system' | 'light' | 'dark'>(
@@ -207,13 +207,15 @@ function App() {
   }))
 
   // Get all metrics (enabled + disabled) for popup at a specific timestamp
-  const getAllMetricsAtTimestamp = (timestamp: string): Array<{ name: string; value: number | string }> => {
+  const getAllMetricsAtTimestamp = (timestamp: string): Array<{ name: string; value: unknown; description?: string; componentType?: string }> => {
     const batch = metricsData.find((m) => m.stored_at === timestamp)
     if (!batch) return []
 
     // Return all metrics from the batch, not just enabled ones
     return batch.metrics.map(m => ({
-      name: m.name,
+      name: m.metadata?.alias || m.name,
+      description: m.metadata?.description,
+      componentType: m.metadata?.component_type,
       value: m.value,
     }))
   }
