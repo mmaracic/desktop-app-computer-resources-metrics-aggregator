@@ -121,6 +121,7 @@ class Config(BaseModel):
     port: int | None = None
     dev: bool = False
     log_to_file: bool = False
+    fe_debug: bool = False
 
 
 @asynccontextmanager
@@ -321,8 +322,14 @@ def parse_args() -> Config:
         action="store_true",
         help="Enable logging to application.log file (in addition to console)",
     )
+    parser.add_argument(
+        "--fe-debug",
+        action="store_true",
+        help="Enable the webview inspector (right-click -> Inspect Element)",
+    )
     args = parser.parse_args()
     return Config(
+        fe_debug=args.fe_debug,
         host=args.host,
         port=args.port,
         dev=args.dev,
@@ -363,12 +370,12 @@ def main() -> None:
 
     server_url = f"http://{config.host}:{config.port}"
     logger.info("Connecting to backend server at %s", server_url)
-    window = webview.create_window("Hello world", server_url)
+    window = webview.create_window("Computer Resources Metrics Aggregator", server_url)
     if window is None:
         logger.error("Failed to create webview window, shutting down backend server...")
         return
     window.events.shown += lambda: logger.info("Webview window is now visible")
-    webview.start()
+    webview.start(debug=config.fe_debug)
 
     logger.info("Webview window closed, shutting down backend server...")
     # Signal uvicorn to exit gracefully so the FastAPI lifespan shutdown runs.
