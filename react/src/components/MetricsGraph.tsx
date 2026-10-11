@@ -22,8 +22,12 @@ interface GraphProps {
 export function MetricsGraph({ series, onClickTimePoint }: GraphProps) {
     const svgRef = useRef<SVGSVGElement>(null)
     const [dimensions, setDimensions] = useState({ width: 800, height: 500 })
-    // Sticky until the cursor leaves the graph, so rescaling doesn't cause hover flicker
+    // null means "All": every line shown, Y scale fitted to all of them
     const [activeSeries, setActiveSeries] = useState<string | null>(null)
+
+    useEffect(() => {
+        if (activeSeries !== null && !series.some((s) => s.name === activeSeries)) setActiveSeries(null)
+    }, [series, activeSeries])
 
     useEffect(() => {
         const handleResize = () => {
@@ -76,8 +80,6 @@ export function MetricsGraph({ series, onClickTimePoint }: GraphProps) {
         const y = d3.scaleLinear()
             .domain([minValue - pad, maxValue + pad])
             .range([height, 0])
-
-        svg.on('mouseleave', () => setActiveSeries(null))
 
         g.append('clipPath').attr('id', 'plot-clip')
             .append('rect').attr('x', -10).attr('y', 0).attr('width', width + 20).attr('height', height)
@@ -144,7 +146,6 @@ export function MetricsGraph({ series, onClickTimePoint }: GraphProps) {
                 .attr('stroke-linecap', 'round')
                 .attr('d', lineGenerator)
                 .style('cursor', 'pointer')
-                .on('mouseenter', () => setActiveSeries(seriesItem.name))
                 .on('mousemove', (event: any) => {
                     const [mx, my] = d3.pointer(event, g.node())
                     showTooltip(seriesItem.name, mx, my, seriesItem.color)
@@ -182,7 +183,6 @@ export function MetricsGraph({ series, onClickTimePoint }: GraphProps) {
                         onClickTimePoint(seriesItem.data[i].timestamp)
                     })
                     .on('mouseover', (_event: any) => {
-                        setActiveSeries(seriesItem.name)
                         d3.select(_event.currentTarget).attr('r', 6)
                         showTooltip(String(seriesItem.data[i].value), point.x, point.y - 4, seriesItem.color)
                     })
@@ -199,8 +199,21 @@ export function MetricsGraph({ series, onClickTimePoint }: GraphProps) {
     }, [series, dimensions, onClickTimePoint, activeSeries])
 
     return (
-        <Card className="p-4">
+        <Card className="p-4 flex flex-col gap-4">
             <svg ref={svgRef} width="100%" height={500} style={{ height: '500px', minHeight: '500px' }} />
+            <div role="radiogroup" className="flex flex-row flex-wrap gap-x-4 gap-y-2 text-sm">
+                <label className="flex items-center gap-2 cursor-pointer">
+                    <input type="radio" name="series-focus" checked={activeSeries === null} onChange={() => setActiveSeries(null)} />
+                    <span>All</span>
+                </label>
+                {series.map((s) => (
+                    <label key={s.name} className="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="series-focus" checked={activeSeries === s.name} onChange={() => setActiveSeries(s.name)} />
+                        <span className="inline-block w-3 h-3 rounded-sm" style={{ background: s.color }} />
+                        <span>{s.name}</span>
+                    </label>
+                ))}
+            </div>
         </Card>
     )
 }

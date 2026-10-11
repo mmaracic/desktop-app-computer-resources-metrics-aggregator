@@ -314,7 +314,7 @@ function App() {
                 Click on any point in the graph to see detailed values. Hover over point to see its value.
               </p>
               <p>
-                Hover over line to scale the Y axis according to it. Leave the graph to restore Y scale.
+                Select a line in the legend to scale the Y axis according to it; choose All to restore.
               </p>
             </div>
 

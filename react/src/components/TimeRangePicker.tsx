@@ -10,7 +10,7 @@ interface TimeRangePickerProps {
     readonly extra?: React.ReactNode
 }
 
-type PresetDuration = '1h' | '3h' | '6h' | '12h' | '24h'
+type PresetDuration = '1h' | '3h' | '6h' | '12h' | '24h' | '168h'
 
 // Backend expects full ISO 8601 with seconds and a UTC offset (e.g. 2026-09-28T00:31:00+02:00)
 const toISOWithOffset = (dateStr: string, timeStr: string): string => {
@@ -224,6 +224,7 @@ export function TimeRangePicker({ onTimeRangeChange, extra }: TimeRangePickerPro
                     <option value="6h">Last 6 hours</option>
                     <option value="12h">Last 12 hours</option>
                     <option value="24h">Last 24 hours</option>
+                    <option value="168h">Last 7 days</option>
                 </select>
             )}
 
