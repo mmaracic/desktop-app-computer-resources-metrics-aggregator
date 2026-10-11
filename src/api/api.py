@@ -1,6 +1,7 @@
 """This module defines the API routes for the FastAPI application."""
 
 import logging
+from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, HTTPException, Request
 
@@ -211,15 +212,36 @@ def get_metric_metadata(request: Request) -> list[dict[str, object]]:
     # Get metric metadata from app.state
     metric_metadata: dict[str, MetricMetadata] = request.app.state.metric_metadata
 
+    # Get storage service from app.state
+    metrics_service: MetricsService = request.app.state.metrics_service
+
     if metric_metadata is None:
         raise HTTPException(
             status_code=500,
             detail=METRIC_METADATA_NOT_INITIALIZED,
         )
+    if metrics_service is None:
+        raise HTTPException(
+            status_code=500,
+            detail=METRICS_SERVICE_NOT_INITIALIZED,
+        )
 
+    now = datetime.now(UTC)
+    metric_names = metrics_service.retrieve_unique_local_metric_names_by_datetime_range(
+        metric_metadata=metric_metadata,
+        start_datetime=now - timedelta(days=2),
+        end_datetime=now,
+    )
     # Include the raw metric name so the frontend can join this metadata with
     # the name-only metrics returned by /metrics/range.
-    return [
+    selected_metadata = [
         {"name": name, **metadata.model_dump(mode="json")}
         for name, metadata in metric_metadata.items()
+        if not metric_names or name in metric_names
     ]
+    logger.info(
+        "Returned %d out of %d metadata items",
+        len(selected_metadata),
+        len(metric_metadata),
+    )
+    return selected_metadata

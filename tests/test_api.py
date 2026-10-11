@@ -13,6 +13,137 @@ from src.metric.model.metric_type import MetricType
 from src.service.metrics_service import MetricsService
 
 
+def _service_with_names(names: list[str]) -> MagicMock:
+    service = MagicMock()
+    service.retrieve_unique_local_metric_names_by_datetime_range.return_value = names
+    return service
+
+
+def _cpu_metadata() -> MetricMetadata:
+    return MetricMetadata(
+        metric_type=MetricType.FLOAT,
+        alias="CPU Usage",
+        description="CPU usage percentage",
+        component_type=ComponentType.CPU,
+        warning_threshold=0.8,
+        critical_threshold=0.95,
+    )
+
+
+def test_get_metric_metadata_filters_to_names_present_in_storage() -> None:
+    """Only metadata for metrics found in local storage is returned, with name included."""
+    app = FastAPI()
+    app.include_router(router)
+    app.state.metric_metadata = {"cpu_usage": _cpu_metadata(), "other": _cpu_metadata()}
+    service = _service_with_names(["cpu_usage"])
+    app.state.metrics_service = service
+
+    response = TestClient(app).get("/metrics/metadata")
+
+    assert response.status_code == 200
+    result = response.json()
+    assert [item["name"] for item in result] == ["cpu_usage"]
+    kwargs = (
+        service.retrieve_unique_local_metric_names_by_datetime_range.call_args.kwargs
+    )
+    assert kwargs["start_datetime"] < kwargs["end_datetime"]
+
+
+def test_get_metric_metadata_returns_all_when_no_recent_metrics() -> None:
+    """All metadata is returned when storage has no recent metric names."""
+    app = FastAPI()
+    app.include_router(router)
+    app.state.metric_metadata = {"cpu_usage": _cpu_metadata(), "other": _cpu_metadata()}
+    app.state.metrics_service = _service_with_names([])
+
+    response = TestClient(app).get("/metrics/metadata")
+
+    assert response.status_code == 200
+    assert {item["name"] for item in response.json()} == {"cpu_usage", "other"}
+
+
+def test_get_metric_metadata_service_not_initialized() -> None:
+    """Returns 500 when the metrics service is None."""
+    app = FastAPI()
+    app.include_router(router)
+    app.state.metric_metadata = {"cpu_usage": _cpu_metadata()}
+    app.state.metrics_service = None
+
+    response = TestClient(app).get("/metrics/metadata")
+
+    assert response.status_code == 500
+
+
+def test_get_metric_metadata_metadata_not_initialized() -> None:
+    """Returns 500 when the metadata is None."""
+    app = FastAPI()
+    app.include_router(router)
+    app.state.metric_metadata = None
+    app.state.metrics_service = _service_with_names([])
+
+    response = TestClient(app).get("/metrics/metadata")
+
+    assert response.status_code == 500
+
+
+def test_get_metrics_range_invalid_datetime_returns_400() -> None:
+    """Invalid datetime strings return 400."""
+    app = FastAPI()
+    app.include_router(router)
+    app.state.metric_metadata = {}
+    app.state.metrics_service = MagicMock()
+
+    response = TestClient(app).get(
+        "/metrics/range",
+        params={"start_datetime": "nope", "end_datetime": "2026-09-19T00:00:00+00:00"},
+    )
+
+    assert response.status_code == 400
+
+
+def test_get_metrics_range_start_after_end_returns_400() -> None:
+    """start_datetime after end_datetime returns 400."""
+    app = FastAPI()
+    app.include_router(router)
+    app.state.metric_metadata = {}
+    app.state.metrics_service = MagicMock()
+
+    response = TestClient(app).get(
+        "/metrics/range",
+        params={
+            "start_datetime": "2026-09-20T00:00:00+00:00",
+            "end_datetime": "2026-09-19T00:00:00+00:00",
+        },
+    )
+
+    assert response.status_code == 400
+
+
+def test_get_metric_configs_reader_not_initialized() -> None:
+    """GET /metrics/config returns 500 when reader/writer is None."""
+    app = FastAPI()
+    app.include_router(router)
+    app.state.config_reader_writer = None
+
+    assert TestClient(app).get("/metrics/config").status_code == 500
+
+
+def test_store_metric_configs_write_error_returns_500() -> None:
+    """POST /metrics/config returns 500 when writing fails."""
+    writer = MagicMock()
+    writer.write_configs.side_effect = OSError("disk")
+    app = FastAPI()
+    app.include_router(router)
+    app.state.config_reader_writer = writer
+
+    response = TestClient(app).post(
+        "/metrics/config",
+        json=[{"name": "a", "enabled": True, "order": 1, "color": "#000000"}],
+    )
+
+    assert response.status_code == 500
+
+
 def test_get_metrics_by_datetime_range_with_mocked_disk_storage_and_no_azure_storage(
     tmp_path,
 ):
@@ -206,6 +337,7 @@ def test_get_metric_metadata_success() -> None:
     app = FastAPI()
     app.include_router(router)
     app.state.metric_metadata = mock_metric_metadata
+    app.state.metrics_service = _service_with_names(["cpu_usage", "gpu_temperature"])
     client = TestClient(app)
 
     response = client.get("/metrics/metadata")
@@ -268,6 +400,7 @@ def test_get_metric_metadata_empty() -> None:
     app = FastAPI()
     app.include_router(router)
     app.state.metric_metadata = {}
+    app.state.metrics_service = _service_with_names([])
     client = TestClient(app)
 
     response = client.get("/metrics/metadata")
@@ -297,6 +430,7 @@ def test_get_metric_metadata_consistency_with_metrics_data() -> None:
     app = FastAPI()
     app.include_router(router)
     app.state.metric_metadata = mock_metric_metadata
+    app.state.metrics_service = _service_with_names(["cpu_usage"])
     client = TestClient(app)
 
     response = client.get("/metrics/metadata")

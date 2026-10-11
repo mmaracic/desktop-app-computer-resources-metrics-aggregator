@@ -148,6 +148,64 @@ class MetricsService:
             str,
         ] = {}  # file_name -> full local path; azure files will be downloaded and converted to local if needed
 
+        candidate_files.update(
+            self._retrieve_local_files_in_range(start_datetime, end_datetime),
+        )
+
+        candidate_files.update(
+            self._retrieve_azure_files_in_range(
+                start_datetime,
+                end_datetime,
+                container_name,
+            ),
+        )
+
+        return self._process_local_files_and_extract_metrics_in_time(
+            candidate_files,
+            metric_metadata,
+            start_datetime,
+            end_datetime,
+        )
+
+    def retrieve_unique_local_metric_names_by_datetime_range(
+        self,
+        metric_metadata: dict[str, MetricMetadata],
+        start_datetime: datetime,
+        end_datetime: datetime,
+    ) -> list[str]:
+        """Retrieve Metrics data from local storage within a datetime range.
+
+        Args:
+            metric_metadata (dict[str, MetricMetadata]): Dictionary of metric metadata keyed by metric name.
+            start_datetime (datetime): The start of the datetime range (inclusive).
+            end_datetime (datetime): The end of the datetime range (inclusive).
+
+        Returns:
+            list[str]: List of unique local metric names within the datetime range.
+
+        """
+        candidate_files = self._retrieve_local_files_in_range(
+            start_datetime, end_datetime
+        )
+        metrics_in_time_list = self._process_local_files_and_extract_metrics_in_time(
+            candidate_files,
+            metric_metadata,
+            start_datetime,
+            end_datetime,
+        )
+        unique_metric_names = set()
+        for metrics_in_time in metrics_in_time_list:
+            metrics = metrics_in_time.metrics
+            unique_metric_names.update([metric.name for metric in metrics])
+        return list(unique_metric_names)
+
+    def _retrieve_local_files_in_range(
+        self,
+        start_datetime: datetime,
+        end_datetime: datetime,
+    ) -> dict[str, str]:
+        candidate_files: dict[str, str] = {}
+
         # Get local files
         local_files = self.disk_storage.list_files()
         logger.info("Found %d local files", len(local_files))
@@ -169,6 +227,15 @@ class MetricsService:
                     "Local file in range and added to candidate files: %s",
                     file_name,
                 )
+        return candidate_files
+
+    def _retrieve_azure_files_in_range(
+        self,
+        start_datetime: datetime,
+        end_datetime: datetime,
+        container_name: str | None,
+    ) -> dict[str, str]:
+        candidate_files: dict[str, str] = {}
 
         # Get Azure files that are missing locally if container name is provided
         if self.azure_storage and container_name:
@@ -204,7 +271,15 @@ class MetricsService:
                     candidate_files[blob.name] = str(
                         Path(self.disk_storage.base_path) / blob.name,
                     )
+        return candidate_files
 
+    def _process_local_files_and_extract_metrics_in_time(
+        self,
+        candidate_files: dict[str, str],
+        metric_metadata: dict[str, MetricMetadata],
+        start_datetime: datetime,
+        end_datetime: datetime,
+    ) -> list[MetricsInTime]:
         # Process local files and extract metrics in time within the specified datetime range
         result_metrics_in_time: list[MetricsInTime] = []
 
