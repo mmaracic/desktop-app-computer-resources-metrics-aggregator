@@ -20,6 +20,9 @@ wheels/
 # Metric files
 daily_metrics*.json
 
+# Metric configuration files
+metric_config.json
+
 # Log files
 application*.log
 

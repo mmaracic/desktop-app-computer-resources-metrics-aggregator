@@ -13,12 +13,13 @@ function App() {
 
   const [metricsData, setMetricsData] = useState<MetricData[]>([])
   const [configs, setConfigs] = useState<MetricConfig[]>([])
-  const [availableMetrics, setAvailableMetrics] = useState<Array<{ name: string; description?: string }>>([])
+  const [availableMetrics, setAvailableMetrics] = useState<Array<{ name: string; description?: string; componentType?: string }>>([])
   const [selectedTimestamp, setSelectedTimestamp] = useState<string | null>(null)
   const [selectedMetrics, setSelectedMetrics] = useState<Array<{ name: string; value: unknown; description?: string; componentType?: string }>>([])
   const [isLoading, setIsLoading] = useState(true)
   const [graphType, setGraphType] = useState<string>('')
   const [activeTab, setActiveTab] = useState<'graph' | 'config'>('graph')
+  const [loadedFromFile, setLoadedFromFile] = useState(false)
   const [theme, setTheme] = useState<'system' | 'light' | 'dark'>(
     () => {
       try {
@@ -92,6 +93,7 @@ function App() {
         const metricsList = Array.from(metadata.values()).map(meta => ({
           name: meta.alias,
           description: meta.description,
+          componentType: meta.component_type,
         }))
         console.log('✅ Available metrics list:', metricsList.length, 'items')
         console.log('   Sample metrics:', metricsList.slice(0, 3))
@@ -151,6 +153,7 @@ function App() {
           console.log('   Sample configs:', configData.slice(0, 3).map(c => ({ name: c.name, enabled: c.enabled, color: c.color })))
         }
         setConfigs(configData)
+        setLoadedFromFile(configData.length > 0)
       } catch (err: any) {
         console.error('❌ Error fetching configs:', err)
         console.error('Stack trace:', err.stack)
@@ -246,6 +249,7 @@ function App() {
     try {
       await saveMetricConfigs(newConfigs)
       setConfigs(newConfigs)
+      setLoadedFromFile(true)
     } catch (err) {
       console.error('Failed to save configs:', err)
     }
@@ -350,6 +354,7 @@ function App() {
               configs={effectiveConfigs}
               onChange={setConfigs}
               onSave={handleConfigSave}
+              isDefault={!loadedFromFile}
               availableMetrics={availableMetrics}
             />
           </Card>

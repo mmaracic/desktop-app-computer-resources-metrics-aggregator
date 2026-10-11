@@ -16,6 +16,7 @@ interface MetricConfig {
 interface AvailableMetric {
     name: string
     description?: string
+    componentType?: string
 }
 
 interface ConfigurationSectionProps {
@@ -23,6 +24,7 @@ interface ConfigurationSectionProps {
     onChange: (configs: MetricConfig[]) => void
     onSave: (configs: MetricConfig[]) => void
     availableMetrics?: AvailableMetric[]
+    isDefault?: boolean
 }
 
 const presetColors = [
@@ -37,25 +39,57 @@ const presetColors = [
     '#8b5cf6',
     '#d946ef',
     '#f43f5e',
+    '#14b8a6',
+    '#0ea5e9',
+    '#a855f7',
+    '#ec4899',
+    '#eab308',
+    '#22c55e',
+    '#64748b',
+    '#78716c',
+    '#000000',
+    '#ffffff',
 ]
 
-export function ConfigurationSection({ configs, onChange, onSave, availableMetrics }: Readonly<ConfigurationSectionProps>) {
+export function ConfigurationSection({ configs, onChange, onSave, availableMetrics, isDefault = false }: Readonly<ConfigurationSectionProps>) {
     const [searchTerm, setSearchTerm] = useState('')
-
-    console.log('[ConfigurationSection] Received configs:', configs?.length || 0, 'items')
-    console.log('[ConfigurationSection] Available metrics:', availableMetrics?.length || 0, 'items')
+    const [selectedTypes, setSelectedTypes] = useState<string[]>([])
+    const [sortBy, setSortBy] = useState<'order' | 'type-name'>('order')
 
     const localConfigs = configs || []
 
+    // Join each config metric with its metadata by name to get its type
+    const metadataByName = new Map((availableMetrics || []).map((m) => [m.name, m]))
+    const joinedConfigs = localConfigs.map((c) => ({
+        ...c,
+        componentType: metadataByName.get(c.name)?.componentType || 'OTHER',
+    }))
+    const allTypes = Array.from(new Set(joinedConfigs.filter((c) => !!c.name).map((c) => c.componentType))).sort(
+        (a, b) => a.localeCompare(b),
+    )
+
+    const toggleType = (type: string) =>
+        setSelectedTypes((prev) => (prev.includes(type) ? prev.filter((t) => t !== type) : [...prev, type]))
+
     // Filter out process metrics (metrics with "count" or "total_bytes" in name are typically not shown)
-    const visibleConfigs = localConfigs.filter(
+    const visibleConfigs = joinedConfigs.filter(
         (config) => !!config.name && !config.name.includes('count') && !config.name.includes('total_bytes')
     )
 
     // Further filter by the alias search term (case-insensitive substring match)
-    const displayMetrics = searchTerm.trim()
+    const nameFiltered = searchTerm.trim()
         ? visibleConfigs.filter((config) => config.name.toLowerCase().includes(searchTerm.trim().toLowerCase()))
         : visibleConfigs
+
+    const typeFiltered = selectedTypes.length > 0
+        ? nameFiltered.filter((config) => selectedTypes.includes(config.componentType))
+        : nameFiltered
+
+    const displayMetrics = sortBy === 'type-name'
+        ? [...typeFiltered].sort(
+            (a, b) => a.componentType.localeCompare(b.componentType) || a.name.localeCompare(b.name),
+        )
+        : typeFiltered
 
     const handleToggleEnabled = (name: string) => {
         onChange(localConfigs.map((c) => (c.name === name ? { ...c, enabled: !c.enabled } : c)))
@@ -118,7 +152,35 @@ export function ConfigurationSection({ configs, onChange, onSave, availableMetri
                     onChange={(e) => setSearchTerm(e.target.value)}
                 />
 
-                {/* Metrics list - each metric gets its own card, scrolls after ~10 items */}
+                <div className="flex flex-wrap items-center gap-2">
+                    <span className="text-sm text-muted-foreground">Type:</span>
+                    {allTypes.map((type) => (
+                        <Button
+                            key={type}
+                            size="sm"
+                            variant="outline"
+                            aria-pressed={selectedTypes.includes(type)}
+                            className={selectedTypes.includes(type) ? 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700 hover:text-white' : ''}
+                            onClick={() => toggleType(type)}
+                        >
+                            {type}
+                        </Button>
+                    ))}
+                    {selectedTypes.length > 0 && (
+                        <Button size="sm" variant="ghost" onClick={() => setSelectedTypes([])}>
+                            Clear
+                        </Button>
+                    )}
+                    <span className="text-sm text-muted-foreground ml-auto">Sort by:</span>
+                    <select
+                        value={sortBy}
+                        onChange={(e) => setSortBy(e.target.value as 'order' | 'type-name')}
+                        className="h-8 rounded-md border border-input bg-transparent px-2 text-sm"
+                    >
+                        <option value="order">Order</option>
+                        <option value="type-name">Type, then name</option>
+                    </select>
+                </div>
                 <div className="space-y-3 max-h-[640px] overflow-y-auto pr-1">
                     {displayMetrics.map((config, index) => (
                         <Card key={`${config.name}-${index}`} className="p-4 border-l-4" style={{ borderLeftColor: config.color }}>
@@ -135,10 +197,10 @@ export function ConfigurationSection({ configs, onChange, onSave, availableMetri
                                 </div>
 
                                 {/* Color Picker */}
-                                <div className="flex items-center gap-2">
+                                <div className="flex items-center gap-2 flex-1 min-w-0">
                                     <span className="text-sm text-muted-foreground">Color:</span>
-                                    <div className="flex gap-1">
-                                        {presetColors.slice(0, 5).map((color) => (
+                                    <div className="flex gap-1 flex-wrap items-center flex-1 min-w-0">
+                                        {presetColors.map((color) => (
                                             <button
                                                 key={color}
                                                 onClick={() => handleColorChange(config.name, color)}
@@ -147,6 +209,16 @@ export function ConfigurationSection({ configs, onChange, onSave, availableMetri
                                                 title={color}
                                             />
                                         ))}
+                                        <div className="flex items-center gap-2 ml-2 pl-3 border-l">
+                                            <span className="text-xs text-muted-foreground">Custom:</span>
+                                            <input
+                                                type="color"
+                                                value={/^#[0-9a-f]{6}$/i.test(config.color) ? config.color : '#000000'}
+                                                onChange={(e) => handleColorChange(config.name, e.target.value)}
+                                                className="w-8 h-8 p-0.5 border rounded cursor-pointer bg-transparent"
+                                                title="Pick a custom RGB color"
+                                            />
+                                        </div>
                                     </div>
                                 </div>
 
@@ -164,9 +236,11 @@ export function ConfigurationSection({ configs, onChange, onSave, availableMetri
                                 </div>
 
                                 {/* Remove Button */}
-                                <Button onClick={() => handleRemoveMetric(config.name)} size="icon" variant="ghost" className="h-8 w-8 text-red-500 hover:text-red-700">
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
+                                <span title={isDefault ? 'Default configuration cannot be deleted' : 'Remove'} className={isDefault ? 'cursor-not-allowed' : ''}>
+                                    <Button onClick={() => handleRemoveMetric(config.name)} size="icon" variant="ghost" disabled={isDefault} className={`h-8 w-8 ${isDefault ? 'text-gray-400 opacity-40' : 'text-red-500 hover:text-red-700'}`}>
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                </span>
                             </div>
                         </Card>
                     ))}
