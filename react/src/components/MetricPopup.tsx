@@ -16,6 +16,7 @@ interface PopupProps {
     readonly onClose: () => void
     readonly timestamp: string
     readonly metrics: MetricValue[]
+    readonly initialTab?: string
 }
 
 const PROCESS_TYPE = 'PROCESS'
@@ -65,8 +66,8 @@ function MetricRow({ metric }: { readonly metric: MetricValue }) {
     )
 }
 
-export function MetricPopup({ isOpen, onClose, timestamp, metrics }: PopupProps) {
-    const [selectedTab, setSelectedTab] = useState<string | null>(null)
+export function MetricPopup({ isOpen, onClose, timestamp, metrics, initialTab }: PopupProps) {
+    const [selectedTab, setSelectedTab] = useState<string | null>(initialTab ?? null)
 
     const groups = useMemo(() => {
         const map = new Map<string, MetricValue[]>()
@@ -112,7 +113,7 @@ export function MetricPopup({ isOpen, onClose, timestamp, metrics }: PopupProps)
                             <button
                                 key={tab}
                                 onClick={() => setSelectedTab(tab)}
-                                className={`px-3 py-1.5 -mb-px border-b-2 text-sm font-medium ${activeTab === tab ? 'border-primary text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+                                className={`px-3 py-1.5 -mb-px border-b-2 text-sm font-medium rounded-t-md ${activeTab === tab ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]' : 'border-transparent text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] hover:bg-[hsl(var(--muted))]'}`}
                             >
                                 {tab}
                             </button>

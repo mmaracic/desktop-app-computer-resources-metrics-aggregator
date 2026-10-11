@@ -4,10 +4,10 @@ import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Label } from './ui/label'
 import { Checkbox } from './ui/checkbox'
-import { Separator } from './ui/separator'
 
 interface TimeRangePickerProps {
     readonly onTimeRangeChange: (start: string, end: string) => void
+    readonly extra?: React.ReactNode
 }
 
 type PresetDuration = '1h' | '3h' | '6h' | '12h' | '24h'
@@ -23,7 +23,7 @@ const toISOWithOffset = (dateStr: string, timeStr: string): string => {
     return `${dateStr}T${timeStr}:00${tzSign}${tzHours}:${tzMinutes}`
 }
 
-export function TimeRangePicker({ onTimeRangeChange }: TimeRangePickerProps) {
+export function TimeRangePicker({ onTimeRangeChange, extra }: TimeRangePickerProps) {
     const [startDate] = useState<string>('')
     const [endDate] = useState<string>('')
     const [startDateTime, setStartDateTime] = useState<{ date: string; time: string }>({ date: '', time: '' })
@@ -151,18 +151,9 @@ export function TimeRangePicker({ onTimeRangeChange }: TimeRangePickerProps) {
     }
 
     return (
-        <div className="space-y-4">
-            <div className="flex items-center justify-between">
-                <Label htmlFor="time-range">Time Range</Label>
-                {!resetDisabled && (
-                    <Button onClick={handleReset} variant="outline" size="sm">
-                        Reset
-                    </Button>
-                )}
-            </div>
-
-            <div className="grid grid-cols-4 gap-3">
-                <div className="space-y-1.5">
+        <div className="flex flex-wrap items-end gap-x-3 gap-y-2">
+            <div className="grid grid-cols-4 gap-2 flex-1 min-w-[480px]">
+                <div className="space-y-1">
                     <Label htmlFor="start-date" className="text-xs">Start Date</Label>
                     <Input
                         ref={startDateRef}
@@ -173,7 +164,7 @@ export function TimeRangePicker({ onTimeRangeChange }: TimeRangePickerProps) {
                     />
                 </div>
 
-                <div className="space-y-1.5">
+                <div className="space-y-1">
                     <Label htmlFor="start-time" className="text-xs">Start Time</Label>
                     <Input
                         ref={startTimeRef}
@@ -184,7 +175,7 @@ export function TimeRangePicker({ onTimeRangeChange }: TimeRangePickerProps) {
                     />
                 </div>
 
-                <div className="space-y-1.5">
+                <div className="space-y-1">
                     <Label htmlFor="end-date" className="text-xs">End Date</Label>
                     <Input
                         ref={endDateRef}
@@ -196,7 +187,7 @@ export function TimeRangePicker({ onTimeRangeChange }: TimeRangePickerProps) {
                     />
                 </div>
 
-                <div className="space-y-1.5">
+                <div className="space-y-1">
                     <Label htmlFor="end-time" className="text-xs">End Time</Label>
                     <Input
                         ref={endTimeRef}
@@ -209,38 +200,40 @@ export function TimeRangePicker({ onTimeRangeChange }: TimeRangePickerProps) {
                 </div>
             </div>
 
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-2 h-9">
                 <Checkbox
                     id="present"
                     checked={isPresentSelected}
                     onCheckedChange={handlePresentChange}
                 />
-                <Label htmlFor="present" className="cursor-pointer font-normal">
+                <Label htmlFor="present" className="cursor-pointer font-normal whitespace-nowrap">
                     Show Present
                 </Label>
             </div>
 
             {isPresentSelected && (
-                <div className="space-y-2">
-                    <Label htmlFor="preset-duration" className="text-xs">
-                        Time Range:
-                    </Label>
-                    <select
-                        id="preset-duration"
-                        value={presetDuration}
-                        onChange={(e) => handlePresetChange(e.target.value as PresetDuration)}
-                        className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                        <option value="1h">Last 1 hour</option>
-                        <option value="3h">Last 3 hours</option>
-                        <option value="6h">Last 6 hours</option>
-                        <option value="12h">Last 12 hours</option>
-                        <option value="24h">Last 24 hours</option>
-                    </select>
-                </div>
+                <select
+                    id="preset-duration"
+                    aria-label="Time range"
+                    value={presetDuration}
+                    onChange={(e) => handlePresetChange(e.target.value as PresetDuration)}
+                    className="h-9 rounded-md border border-input bg-transparent px-2 text-sm shadow-sm focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                >
+                    <option value="1h">Last 1 hour</option>
+                    <option value="3h">Last 3 hours</option>
+                    <option value="6h">Last 6 hours</option>
+                    <option value="12h">Last 12 hours</option>
+                    <option value="24h">Last 24 hours</option>
+                </select>
             )}
 
-            <Separator />
+            {extra}
+
+            {!resetDisabled && (
+                <Button onClick={handleReset} variant="outline" size="sm">
+                    Reset
+                </Button>
+            )}
 
             {!isPresentSelected && startDate && endDate && <TimeRangeDescription startDate={startDate} endDate={endDate} />}
         </div>

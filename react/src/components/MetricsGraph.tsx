@@ -21,7 +21,9 @@ interface GraphProps {
 
 export function MetricsGraph({ series, onClickTimePoint }: GraphProps) {
     const svgRef = useRef<SVGSVGElement>(null)
-    const [dimensions, setDimensions] = useState({ width: 800, height: 400 })
+    const [dimensions, setDimensions] = useState({ width: 800, height: 500 })
+    // Sticky until the cursor leaves the graph, so rescaling doesn't cause hover flicker
+    const [activeSeries, setActiveSeries] = useState<string | null>(null)
 
     useEffect(() => {
         const handleResize = () => {
@@ -63,12 +65,23 @@ export function MetricsGraph({ series, onClickTimePoint }: GraphProps) {
             .domain([minTime, maxTime])
             .range([0, width])
 
-        // Y scale (value)
-        const maxValue = Math.max(...series.flatMap((s) => s.data.map((d) => d.value))) || 100
-        const minValue = Math.min(...series.flatMap((s) => s.data.map((d) => d.value))) || 0
+        // Y scale (value), fitted to the hovered series when there is one
+        const scaled = series.some((s) => s.name === activeSeries)
+            ? series.filter((s) => s.name === activeSeries)
+            : series
+        const values = scaled.flatMap((s) => s.data.map((d) => d.value))
+        const maxValue = Math.max(...values)
+        const minValue = Math.min(...values)
+        const pad = (maxValue - minValue) * 0.1 || Math.abs(maxValue) * 0.1 || 1
         const y = d3.scaleLinear()
-            .domain([minValue * 0.9, maxValue * 1.1])
+            .domain([minValue - pad, maxValue + pad])
             .range([height, 0])
+
+        svg.on('mouseleave', () => setActiveSeries(null))
+
+        g.append('clipPath').attr('id', 'plot-clip')
+            .append('rect').attr('x', -10).attr('y', 0).attr('width', width + 20).attr('height', height)
+        const plot = g.append('g').attr('clip-path', 'url(#plot-clip)')
 
         // Color scale
         const colorScale = d3.scaleOrdinal()
@@ -90,27 +103,24 @@ export function MetricsGraph({ series, onClickTimePoint }: GraphProps) {
             .style('font-size', '12px')
             .style('fill', '#888')
 
-        // Add title
-        g.append('text')
-            .attr('x', width / 2)
-            .attr('y', -10)
-            .attr('text-anchor', 'middle')
-            .style('font-size', '14px')
-            .style('font-weight', 'bold')
-            .text('Metrics Over Time')
-
-        // Add Y axis label
-        g.append('text')
-            .attr('transform', `rotate(-90)`)
-            .attr('x', -height / 2)
-            .attr('y', -width / 2 + 40)
+        // Hover tooltip, positioned above the hovered element
+        const tooltip = g.append('g').style('pointer-events', 'none').style('display', 'none')
+        const tooltipBg = tooltip.append('rect').attr('rx', 4).attr('fill', '#222').attr('opacity', 0.9)
+        const tooltipText = tooltip.append('text')
             .attr('text-anchor', 'middle')
             .style('font-size', '12px')
-            .style('fill', '#666')
-            .text('Metric Value')
+            .style('fill', '#fff')
+        const showTooltip = (label: string, px: number, py: number, color: string) => {
+            tooltip.style('display', null).raise()
+            tooltipText.text(label).style('fill', '#fff')
+            const w = (tooltipText.node() as SVGTextElement).getComputedTextLength() + 16
+            tooltipBg.attr('width', w).attr('height', 22).attr('x', -w / 2).attr('y', -16).attr('stroke', color)
+            tooltip.attr('transform', `translate(${px},${py - 14})`)
+        }
+        const hideTooltip = () => tooltip.style('display', 'none')
 
         // Draw lines for each series
-        series.forEach((seriesItem, index) => {
+        series.forEach((seriesItem) => {
             const lineData = seriesItem.data.map((d) => ({
                 x: x(new Date(d.timestamp).getTime()),
                 y: y(d.value),
@@ -122,18 +132,45 @@ export function MetricsGraph({ series, onClickTimePoint }: GraphProps) {
                 .curve(d3.curveMonotoneX)
                 .defined((d: MetricDataPoint) => !Number.isNaN(d.x) && !Number.isNaN(d.y))
 
-            g.append('path')
+            const dim = activeSeries !== null && scaled.length === 1 && seriesItem.name !== activeSeries
+
+            plot.append('path')
                 .datum(lineData)
+                .attr('opacity', dim ? 0.25 : 1)
                 .attr('fill', 'none')
                 .attr('stroke', colorScale(seriesItem.name))
                 .attr('stroke-width', 2)
                 .attr('stroke-linejoin', 'round')
                 .attr('stroke-linecap', 'round')
                 .attr('d', lineGenerator)
+                .style('cursor', 'pointer')
+                .on('mouseenter', () => setActiveSeries(seriesItem.name))
+                .on('mousemove', (event: any) => {
+                    const [mx, my] = d3.pointer(event, g.node())
+                    showTooltip(seriesItem.name, mx, my, seriesItem.color)
+                })
+                .on('mouseout', hideTooltip)
+
+            // Always-visible label above the line's highest point
+            const valid = lineData.filter((p: MetricDataPoint) => !Number.isNaN(p.x) && !Number.isNaN(p.y))
+            if (valid.length > 0 && !dim) {
+                const top = valid.reduce((a: MetricDataPoint, b: MetricDataPoint) => (b.y < a.y ? b : a))
+                const label = g.append('text')
+                    .attr('y', Math.max(top.y - 10, 10))
+                    .style('font-size', '12px')
+                    .style('font-weight', '600')
+                    .style('pointer-events', 'none')
+                    .style('fill', seriesItem.color)
+                    .text(seriesItem.name)
+                const labelWidth = (label.node() as SVGTextElement).getComputedTextLength()
+                const lx = Math.min(Math.max(top.x - labelWidth / 2, 0), Math.max(width - labelWidth, 0))
+                label.attr('x', lx)
+            }
 
             // Add points that are clickable
             lineData.forEach((point: { x: number; y: number }, i: number) => {
-                g.append('circle')
+                plot.append('circle')
+                    .attr('opacity', dim ? 0.25 : 1)
                     .attr('cx', point.x)
                     .attr('cy', point.y)
                     .attr('r', 4)
@@ -144,55 +181,26 @@ export function MetricsGraph({ series, onClickTimePoint }: GraphProps) {
                     .on('click', () => {
                         onClickTimePoint(seriesItem.data[i].timestamp)
                     })
-                    .on('mouseover', (_event: any, d: MetricDataPoint) => {
-                        d3.select(_event.currentTarget)
-                            .transition()
-                            .duration(200)
-                            .attr('r', 6)
+                    .on('mouseover', (_event: any) => {
+                        setActiveSeries(seriesItem.name)
+                        d3.select(_event.currentTarget).attr('r', 6)
+                        showTooltip(String(seriesItem.data[i].value), point.x, point.y - 4, seriesItem.color)
                     })
-                    .on('mouseout', (_event: any, d: MetricDataPoint) => {
-                        d3.select(_event.currentTarget)
-                            .transition()
-                            .duration(200)
-                            .attr('r', 4)
+                    .on('mouseout', (_event: any) => {
+                        d3.select(_event.currentTarget).attr('r', 4)
+                        hideTooltip()
                     })
             })
-
-            // Add legend for each series
-            g.append('g')
-                .attr('transform', `translate(${width - 150}, ${index === 0 ? 20 : 40})`)
-                .append('rect')
-                .attr('x', 0)
-                .attr('y', 0)
-                .attr('width', 140)
-                .attr('height', 20)
-                .style('fill', '#fff')
-                .style('stroke', '#ddd')
-
-            g.append('line')
-                .attr('x1', 0)
-                .attr('y1', 10)
-                .attr('x2', 140)
-                .attr('y2', 10)
-                .attr('stroke', colorScale(seriesItem.name))
-                .attr('stroke-width', 2)
-
-            g.append('text')
-                .attr('x', 145)
-                .attr('y', 14)
-                .style('font-size', '11px')
-                .style('fill', colorScale(seriesItem.name))
-                .text(seriesItem.name)
         })
 
         return () => {
             svg.selectAll('*').remove()
         }
-    }, [series, dimensions, onClickTimePoint])
+    }, [series, dimensions, onClickTimePoint, activeSeries])
 
     return (
         <Card className="p-4">
-            <svg ref={svgRef} width="100%" height={dimensions.height} style={{ minHeight: '400px' }} />
+            <svg ref={svgRef} width="100%" height={500} style={{ height: '500px', minHeight: '500px' }} />
         </Card>
     )
 }

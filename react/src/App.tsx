@@ -17,6 +17,7 @@ function App() {
   const [selectedTimestamp, setSelectedTimestamp] = useState<string | null>(null)
   const [selectedMetrics, setSelectedMetrics] = useState<Array<{ name: string; value: unknown; description?: string; componentType?: string }>>([])
   const [isLoading, setIsLoading] = useState(true)
+  const [graphType, setGraphType] = useState<string>('')
   const [activeTab, setActiveTab] = useState<'graph' | 'config'>('graph')
   const [theme, setTheme] = useState<'system' | 'light' | 'dark'>(
     () => (localStorage.getItem('theme') as 'system' | 'light' | 'dark') || 'system'
@@ -176,7 +177,7 @@ function App() {
   const enabledMetrics = effectiveConfigs.filter((c) => c.enabled)
 
   // Group metrics by name to create time series with all data points
-  const metricsBySeries: Record<string, { color: string; data: Array<{ timestamp: string; value: number }> }> = {}
+  const metricsBySeries: Record<string, { color: string; componentType: string; data: Array<{ timestamp: string; value: number }> }> = {}
 
   if (metricsData.length > 0) {
     metricsData.forEach((timeBatch) => {
@@ -184,10 +185,12 @@ function App() {
         // Configs are keyed by alias (from metadata), not the raw technical metric name
         const seriesName = metric.metadata?.alias || metric.name
         const config = enabledMetrics.find((c) => c.name === seriesName)
-        if (config && typeof metric.value === 'number') {
+        const componentType = metric.metadata?.component_type || 'OTHER'
+        if (config && componentType !== 'PROCESS' && typeof metric.value === 'number') {
           if (!metricsBySeries[seriesName]) {
             metricsBySeries[seriesName] = {
               color: config.color,
+              componentType,
               data: [],
             }
           }
@@ -201,10 +204,13 @@ function App() {
   }
 
   // Convert grouped metrics to series array with names
-  const series: Array<{ name: string; color: string; data: Array<{ timestamp: string; value: number }> }> = Object.entries(metricsBySeries).map(([name, data]) => ({
+  const allSeries = Object.entries(metricsBySeries).map(([name, data]) => ({
     name,
     ...data,
   }))
+  const componentTypes = Array.from(new Set(allSeries.map((s) => s.componentType)))
+  const currentType = componentTypes.includes(graphType) ? graphType : componentTypes[0]
+  const series = allSeries.filter((s) => s.componentType === currentType)
 
   // Get all metrics (enabled + disabled) for popup at a specific timestamp
   const getAllMetricsAtTimestamp = (timestamp: string): Array<{ name: string; value: unknown; description?: string; componentType?: string }> => {
@@ -263,33 +269,54 @@ function App() {
 
         {activeTab === 'graph' && (<>
           {/* Time Range Section */}
-          <Card className="p-6">
-            <div className="mb-4 flex items-center gap-2 text-sm">
-              <label htmlFor="bucket-count">Bucket count</label>
-              <select
-                id="bucket-count"
-                value={bucketCount}
-                onChange={(e) => setBucketCount(Number(e.target.value))}
-                className="rounded-md border bg-background text-foreground px-2 py-1"
-              >
-                {[100, 250, 500, 1000].map((n) => (
-                  <option key={n} value={n}>{n}</option>
-                ))}
-              </select>
-            </div>
-            <TimeRangePicker onTimeRangeChange={(start, end) => {
-              setCurrentStartDate(start)
-              setCurrentEndDate(end)
-            }} />
+          <Card className="px-4 py-3">
+            <TimeRangePicker
+              onTimeRangeChange={(start, end) => {
+                setCurrentStartDate(start)
+                setCurrentEndDate(end)
+              }}
+              extra={
+                <div className="flex items-center gap-2 text-xs">
+                  <label htmlFor="bucket-count">Buckets</label>
+                  <select
+                    id="bucket-count"
+                    value={bucketCount}
+                    onChange={(e) => setBucketCount(Number(e.target.value))}
+                    className="h-8 rounded-md border bg-background text-foreground px-2"
+                  >
+                    {[100, 250, 500, 1000].map((n) => (
+                      <option key={n} value={n}>{n}</option>
+                    ))}
+                  </select>
+                </div>
+              }
+            />
           </Card>
 
           {/* Graph Section */}
           <Card className="p-6">
             <div className="mb-4">
               <p className="text-sm text-muted-foreground">
-                Click on any point in the graph to see detailed values
+                Click on any point in the graph to see detailed values. Hover over point to see its value.
+              </p>
+              <p>
+                Hover over line to scale the Y axis according to it. Leave the graph to restore Y scale.
               </p>
             </div>
+
+            {componentTypes.length > 0 && (
+              <div className="flex flex-wrap gap-2 border-b mb-4">
+                {componentTypes.map((type) => (
+                  <button
+                    key={type}
+                    onClick={() => setGraphType(type)}
+                    className={`px-3 py-1 -mb-px border-b-2 text-sm font-medium rounded-t-md ${currentType === type ? 'border-[hsl(var(--primary))] bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]' : 'border-transparent text-[hsl(var(--muted-foreground))] hover:text-[hsl(var(--foreground))] hover:bg-[hsl(var(--muted))]'}`}
+                  >
+                    {type}
+                  </button>
+                ))}
+              </div>
+            )}
 
             {isLoading ? (
               <div className="flex items-center justify-center h-64">
@@ -325,6 +352,7 @@ function App() {
             onClose={() => setSelectedTimestamp(null)}
             timestamp={selectedTimestamp}
             metrics={selectedMetrics}
+            initialTab={currentType}
           />
         )}
       </div>
