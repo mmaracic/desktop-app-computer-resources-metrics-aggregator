@@ -20,11 +20,21 @@ function App() {
   const [graphType, setGraphType] = useState<string>('')
   const [activeTab, setActiveTab] = useState<'graph' | 'config'>('graph')
   const [theme, setTheme] = useState<'system' | 'light' | 'dark'>(
-    () => (localStorage.getItem('theme') as 'system' | 'light' | 'dark') || 'system'
+    () => {
+      try {
+        return (localStorage.getItem('theme') as 'system' | 'light' | 'dark') || 'system'
+      } catch {
+        return 'system'
+      }
+    }
   )
 
   useEffect(() => {
-    localStorage.setItem('theme', theme)
+    try {
+      localStorage.setItem('theme', theme)
+    } catch {
+      // localStorage is unavailable in pywebview private mode
+    }
     const media = window.matchMedia('(prefers-color-scheme: dark)')
     const apply = () => {
       const dark = theme === 'dark' || (theme === 'system' && media.matches)
