@@ -80,7 +80,7 @@ export function MetricPopup({ isOpen, onClose, timestamp, metrics, initialTab }:
 
     if (!isOpen) return null
 
-    const tabs = Array.from(groups.keys())
+    const tabs = Array.from(groups.keys()).sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
     const activeTab = selectedTab && groups.has(selectedTab) ? selectedTab : tabs[0]
     const activeMetrics = activeTab ? (groups.get(activeTab) ?? []) : []
 

@@ -222,7 +222,9 @@ function App() {
     name,
     ...data,
   }))
-  const componentTypes = Array.from(new Set(allSeries.map((s) => s.componentType)))
+  const componentTypes = Array.from(new Set(allSeries.map((s) => s.componentType))).sort((a, b) =>
+    a.localeCompare(b, undefined, { numeric: true }),
+  )
   const currentType = componentTypes.includes(graphType) ? graphType : componentTypes[0]
   const series = allSeries.filter((s) => s.componentType === currentType)
 

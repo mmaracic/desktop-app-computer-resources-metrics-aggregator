@@ -65,7 +65,7 @@ export function ConfigurationSection({ configs, onChange, onSave, availableMetri
         componentType: metadataByName.get(c.name)?.componentType || 'OTHER',
     }))
     const allTypes = Array.from(new Set(joinedConfigs.filter((c) => !!c.name).map((c) => c.componentType))).sort(
-        (a, b) => a.localeCompare(b),
+        (a, b) => a.localeCompare(b, undefined, { numeric: true }),
     )
 
     const toggleType = (type: string) =>
