@@ -51,6 +51,7 @@ function App() {
   const [currentStartDate, setCurrentStartDate] = useState<string>('')
   const [currentEndDate, setCurrentEndDate] = useState<string>('')
   const [bucketCount, setBucketCount] = useState<number>(100)
+  const [graphSelection, setGraphSelection] = useState<{ start: number; end: number; id: number } | null>(null)
 
   // Time range formatting helper
   const formatISOWithTZ = (date: Date): string => {
@@ -285,6 +286,7 @@ function App() {
           {/* Time Range Section */}
           <Card className="px-4 py-3">
             <TimeRangePicker
+              externalRange={graphSelection}
               onTimeRangeChange={(start, end) => {
                 setCurrentStartDate(start)
                 setCurrentEndDate(end)
@@ -343,7 +345,11 @@ function App() {
             ) : null}
 
             {!isLoading && series.length > 0 && (
-              <MetricsGraph series={series} onClickTimePoint={handleTimePointClick} />
+              <MetricsGraph
+                series={series}
+                onClickTimePoint={handleTimePointClick}
+                onSelectRange={(start, end) => setGraphSelection({ start, end, id: Date.now() })}
+              />
             )}
           </Card>
         </>)}

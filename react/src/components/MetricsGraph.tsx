@@ -12,15 +12,15 @@ interface MetricSeries {
 interface GraphProps {
     series: MetricSeries[]
     onClickTimePoint: (timestamp: string) => void
+    onSelectRange?: (startMs: number, endMs: number) => void
 }
 
-interface GraphProps {
-    series: MetricSeries[]
-    onClickTimePoint: (timestamp: string) => void
-}
-
-export function MetricsGraph({ series, onClickTimePoint }: GraphProps) {
+export function MetricsGraph({ series, onClickTimePoint, onSelectRange }: GraphProps) {
     const svgRef = useRef<SVGSVGElement>(null)
+    const onSelectRangeRef = useRef(onSelectRange)
+    useEffect(() => {
+        onSelectRangeRef.current = onSelectRange
+    })
     const [dimensions, setDimensions] = useState({ width: 800, height: 500 })
     // null means "All": every line shown, Y scale fitted to all of them
     const [activeSeries, setActiveSeries] = useState<string | null>(null)
@@ -193,7 +193,50 @@ export function MetricsGraph({ series, onClickTimePoint }: GraphProps) {
             })
         })
 
+        // Drag to select a time range, shown as a translucent shadow
+        const shadow = g.append('rect')
+            .attr('y', 0)
+            .attr('height', height)
+            .attr('fill', '#3b82f6')
+            .attr('opacity', 0.25)
+            .style('pointer-events', 'none')
+            .style('display', 'none')
+        let startPx: number | null = null
+        let curPx = 0
+        const clampX = (v: number) => Math.min(Math.max(v, 0), width)
+
+        const onMove = (event: MouseEvent) => {
+            if (startPx === null) return
+            curPx = clampX(d3.pointer(event, g.node())[0])
+            shadow.style('display', null)
+                .attr('x', Math.min(startPx, curPx))
+                .attr('width', Math.abs(curPx - startPx))
+        }
+        const onUp = () => {
+            window.removeEventListener('mousemove', onMove)
+            window.removeEventListener('mouseup', onUp)
+            const s = startPx
+            startPx = null
+            shadow.style('display', 'none')
+            if (s === null || Math.abs(curPx - s) < 5) return
+            const a = x.invert(Math.min(s, curPx)).getTime()
+            const b = x.invert(Math.max(s, curPx)).getTime()
+            onSelectRangeRef.current?.(a, b)
+        }
+        svg.on('mousedown', (event: MouseEvent) => {
+            if (event.button !== 0) return
+            const [px, py] = d3.pointer(event, g.node())
+            if (px < 0 || px > width || py < 0 || py > height) return
+            startPx = px
+            curPx = px
+            window.addEventListener('mousemove', onMove)
+            window.addEventListener('mouseup', onUp)
+        })
+
         return () => {
+            window.removeEventListener('mousemove', onMove)
+            window.removeEventListener('mouseup', onUp)
+            svg.on('mousedown', null)
             svg.selectAll('*').remove()
         }
     }, [series, dimensions, onClickTimePoint, activeSeries])

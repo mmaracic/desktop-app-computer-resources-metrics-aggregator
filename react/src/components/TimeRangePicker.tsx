@@ -8,6 +8,8 @@ import { Checkbox } from './ui/checkbox'
 interface TimeRangePickerProps {
     readonly onTimeRangeChange: (start: string, end: string) => void
     readonly extra?: React.ReactNode
+    // Range chosen on the graph; id changes on every new selection
+    readonly externalRange?: { start: number; end: number; id: number } | null
 }
 
 type PresetDuration = '1h' | '3h' | '6h' | '12h' | '24h' | '168h'
@@ -23,7 +25,7 @@ const toISOWithOffset = (dateStr: string, timeStr: string): string => {
     return `${dateStr}T${timeStr}:00${tzSign}${tzHours}:${tzMinutes}`
 }
 
-export function TimeRangePicker({ onTimeRangeChange, extra }: TimeRangePickerProps) {
+export function TimeRangePicker({ onTimeRangeChange, extra, externalRange }: TimeRangePickerProps) {
     const [startDate] = useState<string>('')
     const [endDate] = useState<string>('')
     const [startDateTime, setStartDateTime] = useState<{ date: string; time: string }>({ date: '', time: '' })
@@ -52,6 +54,16 @@ export function TimeRangePicker({ onTimeRangeChange, extra }: TimeRangePickerPro
         setResetDisabled(true)
         setPresetDuration('3h')
     }, [])
+
+    useEffect(() => {
+        if (!externalRange) return
+        const s = new Date(externalRange.start)
+        const e = new Date(externalRange.end)
+        setStartDateTime({ date: format(s, 'yyyy-MM-dd'), time: format(s, 'HH:mm') })
+        setEndDateTime({ date: format(e, 'yyyy-MM-dd'), time: format(e, 'HH:mm') })
+        setIsPresentSelected(false)
+        setResetDisabled(false)
+    }, [externalRange])
 
     const onChangeRef = useRef(onTimeRangeChange)
     useEffect(() => {
