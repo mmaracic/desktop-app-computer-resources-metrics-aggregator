@@ -28,6 +28,28 @@ export interface MetricConfig {
     color: string
 }
 
+const BYTES_PER_MB = 1024 * 1024
+
+const convertUnits = (name: string, value: number | string): number | string => {
+    if (typeof value !== 'number') return value
+    if (name.endsWith('_milliwatts')) return value / 1000
+    if (name.endsWith('_bytes') || name.startsWith('network_bytes_')) return value / BYTES_PER_MB
+    return value
+}
+
+const convertAlias = (name: string, alias: string): string => {
+    if (name.endsWith('_milliwatts')) return alias.replace(/\bmW\b/, 'W')
+    if (name.endsWith('_bytes') || name.startsWith('network_bytes_')) {
+        return alias.replace(/\bbytes\b/, 'MB')
+    }
+    return alias
+}
+
+const splitGpuType = (name: string, meta: MetricMetadata): MetricMetadata => {
+    const card = /^card(\d+)_/.exec(name)
+    return card && meta.component_type === 'GPU' ? { ...meta, component_type: `GPU ${card[1]}` } : meta
+}
+
 export const useMetricsAPI = () => {
     const getMetricsByRange = async (
         startDatetime: string,
@@ -69,7 +91,7 @@ export const useMetricsAPI = () => {
             // Convert array to Map for efficient lookup by the raw metric name (matches metric.name from /metrics/range)
             const metadataMap = new Map<string, MetricMetadata>()
             for (const meta of response.data) {
-                metadataMap.set(meta.name, meta)
+                metadataMap.set(meta.name, splitGpuType(meta.name, meta))
             }
             return metadataMap
         } catch (error: any) {
@@ -119,9 +141,14 @@ export const useMetricsAPI = () => {
                 const metricName = metric.name
                 const existingMetadata = metric.metadata || metadataMap.get(metricName)
 
+                const converted = existingMetadata
+                    ? { ...splitGpuType(metricName, existingMetadata), alias: convertAlias(metricName, existingMetadata.alias) }
+                    : undefined
+
                 return {
                     ...metric,
-                    metadata: existingMetadata || {
+                    value: convertUnits(metricName, metric.value),
+                    metadata: converted || {
                         name: metricName,
                         metric_type: 'Unknown',
                         alias: metricName,

@@ -31,7 +31,6 @@ export function TimeRangePicker({ onTimeRangeChange, extra, externalRange }: Tim
     const [startDateTime, setStartDateTime] = useState<{ date: string; time: string }>({ date: '', time: '' })
     const [endDateTime, setEndDateTime] = useState<{ date: string; time: string }>({ date: '', time: '' })
     const [isPresentSelected, setIsPresentSelected] = useState(true)
-    const [resetDisabled, setResetDisabled] = useState(true)
     const [presetDuration, setPresetDuration] = useState<PresetDuration>('3h')
 
     const startDateRef = useRef<HTMLInputElement>(null)
@@ -51,7 +50,6 @@ export function TimeRangePicker({ onTimeRangeChange, extra, externalRange }: Tim
         setStartDateTime({ date: startDateObj, time: startTime })
         setEndDateTime({ date: endDateObj, time: endTime })
         setIsPresentSelected(true)
-        setResetDisabled(true)
         setPresetDuration('3h')
     }, [])
 
@@ -62,7 +60,6 @@ export function TimeRangePicker({ onTimeRangeChange, extra, externalRange }: Tim
         setStartDateTime({ date: format(s, 'yyyy-MM-dd'), time: format(s, 'HH:mm') })
         setEndDateTime({ date: format(e, 'yyyy-MM-dd'), time: format(e, 'HH:mm') })
         setIsPresentSelected(false)
-        setResetDisabled(false)
     }, [externalRange])
 
     const onChangeRef = useRef(onTimeRangeChange)
@@ -108,13 +105,11 @@ export function TimeRangePicker({ onTimeRangeChange, extra, externalRange }: Tim
         setStartDateTime({ date: startDateObj, time: startTime })
         setEndDateTime({ date: endDateObj, time: endTime })
         setIsPresentSelected(true)
-        setResetDisabled(true)
         onTimeRangeChange(toISOWithOffset(startDateObj, startTime), toISOWithOffset(endDateObj, endTime))
     }
 
     const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setStartDateTime(prev => ({ ...prev, date: e.target.value }))
-        setResetDisabled(false)
 
         // Force update the input value after state change
         if (startDateRef.current) {
@@ -124,7 +119,6 @@ export function TimeRangePicker({ onTimeRangeChange, extra, externalRange }: Tim
 
     const handleStartTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setStartDateTime(prev => ({ ...prev, time: e.target.value }))
-        setResetDisabled(false)
 
         // Force update the input value after state change
         if (startTimeRef.current) {
@@ -134,7 +128,6 @@ export function TimeRangePicker({ onTimeRangeChange, extra, externalRange }: Tim
 
     const handleEndDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setEndDateTime(prev => ({ ...prev, date: e.target.value }))
-        setResetDisabled(false)
 
         // Force update the input value after state change
         if (endDateRef.current) {
@@ -144,7 +137,6 @@ export function TimeRangePicker({ onTimeRangeChange, extra, externalRange }: Tim
 
     const handleEndTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setEndDateTime(prev => ({ ...prev, time: e.target.value }))
-        setResetDisabled(false)
 
         // Force update the input value after state change
         if (endTimeRef.current) {
@@ -154,12 +146,10 @@ export function TimeRangePicker({ onTimeRangeChange, extra, externalRange }: Tim
 
     const handlePresentChange = () => {
         setIsPresentSelected(!isPresentSelected)
-        setResetDisabled(false)
     }
 
     const handlePresetChange = (duration: PresetDuration) => {
         setPresetDuration(duration)
-        setResetDisabled(true)
     }
 
     return (
@@ -242,11 +232,9 @@ export function TimeRangePicker({ onTimeRangeChange, extra, externalRange }: Tim
 
             {extra}
 
-            {!resetDisabled && (
-                <Button onClick={handleReset} variant="outline" size="sm">
-                    Reset
-                </Button>
-            )}
+            <Button onClick={handleReset} variant="outline" size="sm">
+                Reset
+            </Button>
 
             {!isPresentSelected && startDate && endDate && <TimeRangeDescription startDate={startDate} endDate={endDate} />}
         </div>
