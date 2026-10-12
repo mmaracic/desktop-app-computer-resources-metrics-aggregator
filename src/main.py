@@ -135,7 +135,6 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     metadata_map.update(
         MetadataReader(file_path="metadata/temperature_metadata.json").read(),
     )
-    metadata_map.update(MetadataReader(file_path="metadata/fan_metadata.json").read())
     metadata_map.update(
         MetadataReader(file_path="metadata/metric_metadata.json").read(),
     )

@@ -107,6 +107,78 @@
         "warning_threshold": 85.0,
         "critical_threshold": 95.0
     },
+    "card0_vram_used_bytes": {
+        "metric_type": "INTEGER",
+        "minimal_delta": 1,
+        "alias": "GPU 0 Raphael dedicated video memory used in bytes",
+        "description": "Dedicated (non-shared) video memory currently in use",
+        "component_type": "GPU",
+        "warning_threshold": null,
+        "critical_threshold": null
+    },
+    "card1_vram_used_bytes": {
+        "metric_type": "INTEGER",
+        "minimal_delta": 1,
+        "alias": "GPU 1 Radeon dedicated video memory used in bytes",
+        "description": "Dedicated (non-shared) video memory currently in use",
+        "component_type": "GPU",
+        "warning_threshold": null,
+        "critical_threshold": null
+    },
+    "card0_vram_total_bytes": {
+        "metric_type": "INTEGER",
+        "minimal_delta": 1,
+        "alias": "GPU 0 Raphael dedicated video memory total in bytes",
+        "description": "Total dedicated (non-shared) video memory",
+        "component_type": "GPU",
+        "warning_threshold": null,
+        "critical_threshold": null
+    },
+    "card1_vram_total_bytes": {
+        "metric_type": "INTEGER",
+        "minimal_delta": 1,
+        "alias": "GPU 1 Radeon dedicated video memory total in bytes",
+        "description": "Total dedicated (non-shared) video memory",
+        "component_type": "GPU",
+        "warning_threshold": null,
+        "critical_threshold": null
+    },
+    "card0_gpu_power_cap_milliwatts": {
+        "metric_type": "INTEGER",
+        "minimal_delta": 1,
+        "alias": "GPU 0 Raphael power cap in mW",
+        "description": "Configured power limit of the GPU",
+        "component_type": "GPU",
+        "warning_threshold": null,
+        "critical_threshold": null
+    },
+    "card1_gpu_power_cap_milliwatts": {
+        "metric_type": "INTEGER",
+        "minimal_delta": 1,
+        "alias": "GPU 1 Radeon power cap in mW",
+        "description": "Configured power limit of the GPU",
+        "component_type": "GPU",
+        "warning_threshold": null,
+        "critical_threshold": null
+    },
+    "card0_gpu_fan_rpm": {
+        "metric_type": "INTEGER",
+        "minimal_delta": 100,
+        "alias": "GPU 0 Raphael fan speed in RPM",
+        "description": "Rotational speed of the GPU cooling fan",
+        "component_type": "GPU",
+        "warning_threshold": 4000,
+        "critical_threshold": 6000
+    },
+    "card1_gpu_fan_rpm": {
+        "metric_type": "INTEGER",
+        "minimal_delta": 100,
+        "alias": "GPU 1 Radeon fan speed in RPM",
+        "description": "Rotational speed of the GPU cooling fan (0 when the fan is stopped at low load)",
+        "component_type": "GPU",
+        "warning_threshold": 4000,
+        "critical_threshold": 6000
+    },
     "card0_gpu_temperature_celsius": {
         "metric_type": "FLOAT",
         "minimal_delta": 0.5,
@@ -254,8 +326,8 @@
     "cpu_context_switches_voluntary": {
         "metric_type": "INTEGER",
         "minimal_delta": 1,
-        "alias": "Total voluntary context switches",
-        "description": "Counts CPU task switches when processes voluntarily yield control",
+        "alias": "Total context switches",
+        "description": "Counts all CPU task switches, voluntary and involuntary",
         "component_type": "CPU",
         "warning_threshold": null,
         "critical_threshold": null
@@ -263,8 +335,8 @@
     "cpu_interrupts": {
         "metric_type": "INTEGER",
         "minimal_delta": 1,
-        "alias": "Total involuntary context switches",
-        "description": "Counts CPU task switches forced by the system due to resource constraints",
+        "alias": "Total hardware interrupts",
+        "description": "Counts hardware interrupts handled by the CPU since boot",
         "component_type": "CPU",
         "warning_threshold": null,
         "critical_threshold": null
@@ -367,15 +439,6 @@
         "component_type": "DISK",
         "warning_threshold": null,
         "critical_threshold": null
-    },
-    "fan_speed_amdgpu": {
-        "metric_type": "INTEGER",
-        "minimal_delta": 1,
-        "alias": "GPU fan speed - rotational speed of the graphics card cooling fan in RPM",
-        "description": "Fan speed reading from amdgpu sensor",
-        "component_type": "GPU",
-        "warning_threshold": 4000,
-        "critical_threshold": 6000
     },
     "top_process_1": {
         "metric_type": "DICT",

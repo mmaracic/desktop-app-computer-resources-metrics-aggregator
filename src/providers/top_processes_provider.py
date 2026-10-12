@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 class TopProcessesProvider(MetricProvider):
     """Provider for top CPU and RAM consuming processes.
 
-    Returns the top 5 processes by CPU usage and the top 5 processes by memory usage.
+    Returns the top N processes ranked by combined CPU and memory usage.
     """
 
     def __init__(self, top_n: int = 5) -> None:
@@ -23,6 +23,12 @@ class TopProcessesProvider(MetricProvider):
 
         """
         self.top_n = top_n
+        # The first cpu_percent call per process always returns 0.0, so prime it
+        for proc in psutil.process_iter():
+            try:
+                proc.cpu_percent(None)
+            except (psutil.NoSuchProcess, psutil.AccessDenied):
+                continue
 
     def get_metrics(self, metadata: dict[str, MetricMetadata]) -> list[Metric]:
         """Retrieve the top CPU and RAM consuming processes.
@@ -63,7 +69,7 @@ class TopProcessesProvider(MetricProvider):
             except (psutil.NoSuchProcess, psutil.AccessDenied):
                 continue
 
-        # Normalise CPU to 0..1 and memort yo 0..1 and multiply
+        # Normalise CPU and memory to 0..1 and multiply
         # Sort by maximum combined CPU and memory usage
         sorted_processes = sorted(
             processes,
@@ -79,7 +85,7 @@ class TopProcessesProvider(MetricProvider):
             name = proc["name"]
             cpu_percent = proc["cpu_percent"]
 
-            # Create metric name: top_process_1, top_cpu_process_2, etc.
+            # Metric name: top_process_1, top_process_2, etc.
             metric_name = f"top_process_{i}"
 
             metrics.append(

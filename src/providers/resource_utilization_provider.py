@@ -145,7 +145,7 @@ class ResourceUtilizationProvider(MetricProvider):
                     self.createMetric(
                         name="cpu_frequency_mhz",
                         metadata=metadata,
-                        value=freq.current,
+                        value=int(round(freq.current)),
                     ),
                 )
         except (OSError, AttributeError) as exc:

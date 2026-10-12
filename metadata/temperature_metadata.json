@@ -26,6 +26,33 @@
         "warning_threshold": 70.0,
         "critical_threshold": 85.0
     },
+    "temperature_k10temp_tctl": {
+        "metric_type": "FLOAT",
+        "minimal_delta": 0.5,
+        "alias": "AMD CPU control temperature (Tctl)",
+        "description": "Overall CPU temperature used for thermal control",
+        "component_type": "CPU",
+        "warning_threshold": 70.0,
+        "critical_threshold": 85.0
+    },
+    "temperature_k10temp_tccd1": {
+        "metric_type": "FLOAT",
+        "minimal_delta": 0.5,
+        "alias": "AMD CPU CCD 1 temperature",
+        "description": "Temperature of the first core complex die",
+        "component_type": "CPU",
+        "warning_threshold": 70.0,
+        "critical_threshold": 85.0
+    },
+    "temperature_k10temp_tccd2": {
+        "metric_type": "FLOAT",
+        "minimal_delta": 0.5,
+        "alias": "AMD CPU CCD 2 temperature",
+        "description": "Temperature of the second core complex die",
+        "component_type": "CPU",
+        "warning_threshold": 70.0,
+        "critical_threshold": 85.0
+    },
     "temperature_coretemp": {
         "metric_type": "FLOAT",
         "minimal_delta": 0.5,
@@ -337,6 +364,51 @@
         "minimal_delta": 0.5,
         "alias": "GIGABYTE WMI temperature",
         "description": "GIGABYTE motherboard thermal sensor",
+        "component_type": "MOTHERBOARD",
+        "warning_threshold": 60.0,
+        "critical_threshold": 75.0
+    },
+    "temperature_gigabyte_wmi_1": {
+        "metric_type": "FLOAT",
+        "minimal_delta": 0.5,
+        "alias": "GIGABYTE motherboard sensor 1 temperature",
+        "description": "GIGABYTE WMI thermal sensor 1 (unlabeled by the driver)",
+        "component_type": "MOTHERBOARD",
+        "warning_threshold": 60.0,
+        "critical_threshold": 75.0
+    },
+    "temperature_gigabyte_wmi_2": {
+        "metric_type": "FLOAT",
+        "minimal_delta": 0.5,
+        "alias": "GIGABYTE motherboard sensor 2 temperature",
+        "description": "GIGABYTE WMI thermal sensor 2 (unlabeled by the driver)",
+        "component_type": "MOTHERBOARD",
+        "warning_threshold": 60.0,
+        "critical_threshold": 75.0
+    },
+    "temperature_gigabyte_wmi_3": {
+        "metric_type": "FLOAT",
+        "minimal_delta": 0.5,
+        "alias": "GIGABYTE motherboard sensor 3 temperature",
+        "description": "GIGABYTE WMI thermal sensor 3 (unlabeled by the driver)",
+        "component_type": "MOTHERBOARD",
+        "warning_threshold": 60.0,
+        "critical_threshold": 75.0
+    },
+    "temperature_gigabyte_wmi_4": {
+        "metric_type": "FLOAT",
+        "minimal_delta": 0.5,
+        "alias": "GIGABYTE motherboard sensor 4 temperature",
+        "description": "GIGABYTE WMI thermal sensor 4 (unlabeled by the driver)",
+        "component_type": "MOTHERBOARD",
+        "warning_threshold": 60.0,
+        "critical_threshold": 75.0
+    },
+    "temperature_gigabyte_wmi_5": {
+        "metric_type": "FLOAT",
+        "minimal_delta": 0.5,
+        "alias": "GIGABYTE motherboard sensor 5 temperature",
+        "description": "GIGABYTE WMI thermal sensor 5 (unlabeled by the driver)",
         "component_type": "MOTHERBOARD",
         "warning_threshold": 60.0,
         "critical_threshold": 75.0

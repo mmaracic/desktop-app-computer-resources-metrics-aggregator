@@ -55,7 +55,6 @@ def get_metadata_map() -> dict[str, MetricMetadata]:
     metadata_map.update(
         MetadataReader(file_path="metadata/temperature_metadata.json").read(),
     )
-    metadata_map.update(MetadataReader(file_path="metadata/fan_metadata.json").read())
     metadata_map.update(
         MetadataReader(file_path="metadata/metric_metadata.json").read(),
     )

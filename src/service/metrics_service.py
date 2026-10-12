@@ -1,5 +1,6 @@
 import json
 import logging
+from collections import Counter
 from datetime import datetime
 from pathlib import Path
 
@@ -40,6 +41,7 @@ class MetricsService:
 
         """
         metrics_in_time_list: list[MetricsInTime] = []
+        skipped_without_metadata: Counter[str] = Counter()
 
         try:
             file_content = self.disk_storage.read_file(file_path)
@@ -59,11 +61,8 @@ class MetricsService:
                     try:
                         metadata = metric_metadata.get(metric_data["name"])
                         if not metadata:
-                            logger.error(
-                                "Missing metadata for metric data %s in file %s",
-                                metric_data,
-                                file_path,
-                            )
+                            # Older files may hold metrics that were since renamed or removed
+                            skipped_without_metadata[metric_data["name"]] += 1
                             continue
                         metric = Metric(
                             name=metric_data["name"],
@@ -87,6 +86,14 @@ class MetricsService:
 
         except (KeyError, ValueError) as e:
             logger.warning("Failed to load metrics from file %s: %s", file_path, e)
+
+        for name, count in skipped_without_metadata.items():
+            logger.warning(
+                "Metric %s skipped %d times in file %s: no metadata",
+                name,
+                count,
+                file_path,
+            )
 
         return metrics_in_time_list
 

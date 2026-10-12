@@ -13,7 +13,21 @@ class AtiGpuProvider(MetricProvider):
     """
 
     def __init__(self) -> None:
-        self.cards = ["card0", "card1"]
+        self.cards = self._discover_cards()
+
+    @staticmethod
+    def _discover_cards() -> list[str]:
+        cards = []
+        for card_path in sorted(Path("/sys/class/drm").glob("card[0-9]*")):
+            if "-" in card_path.name:
+                continue
+            try:
+                vendor = (card_path / "device" / "vendor").read_text(encoding="utf-8")
+            except OSError:
+                continue
+            if vendor.strip() == "0x1002":
+                cards.append(card_path.name)
+        return cards
 
     def get_metrics(self, metadata: dict[str, MetricMetadata]) -> list[Metric]:
         metrics = []
@@ -34,6 +48,20 @@ class AtiGpuProvider(MetricProvider):
             vram_total = self._read_sysfs(path, "mem_info_vram_total")
             vram_used = self._read_sysfs(path, "mem_info_vram_used")
             if vram_total > 0:
+                metrics.append(
+                    self.createMetric(
+                        name=f"{card}_vram_total_bytes",
+                        value=vram_total,
+                        metadata=metadata,
+                    ),
+                )
+                metrics.append(
+                    self.createMetric(
+                        name=f"{card}_vram_used_bytes",
+                        value=vram_used,
+                        metadata=metadata,
+                    ),
+                )
                 metrics.append(
                     self.createMetric(
                         name=f"{card}_vram_utilization_percent",
@@ -84,6 +112,27 @@ class AtiGpuProvider(MetricProvider):
                     self.createMetric(
                         name=f"{card}_gpu_power_milliwatts",
                         value=power_uw // 1000,
+                        metadata=metadata,
+                    ),
+                )
+
+            power_cap_uw = self._read_hwmon(hwmon, ["power1_cap"])
+            if power_cap_uw is not None:
+                metrics.append(
+                    self.createMetric(
+                        name=f"{card}_gpu_power_cap_milliwatts",
+                        value=power_cap_uw // 1000,
+                        metadata=metadata,
+                    ),
+                )
+
+            # Cards without a fan (iGPU) have no fan1_input
+            fan_rpm = self._read_hwmon(hwmon, ["fan1_input"])
+            if fan_rpm is not None:
+                metrics.append(
+                    self.createMetric(
+                        name=f"{card}_gpu_fan_rpm",
+                        value=fan_rpm,
                         metadata=metadata,
                     ),
                 )
