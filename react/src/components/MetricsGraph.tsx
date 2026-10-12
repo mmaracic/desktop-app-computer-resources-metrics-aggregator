@@ -5,6 +5,7 @@ import { Card } from './ui/card'
 
 interface MetricSeries {
     name: string
+    label: string
     color: string
     data: Array<{ timestamp: string; value: number }>
 }
@@ -148,7 +149,7 @@ export function MetricsGraph({ series, onClickTimePoint, onSelectRange }: GraphP
                 .style('cursor', 'pointer')
                 .on('mousemove', (event: any) => {
                     const [mx, my] = d3.pointer(event, g.node())
-                    showTooltip(seriesItem.name, mx, my, seriesItem.color)
+                    showTooltip(seriesItem.label, mx, my, seriesItem.color)
                 })
                 .on('mouseout', hideTooltip)
 
@@ -162,7 +163,7 @@ export function MetricsGraph({ series, onClickTimePoint, onSelectRange }: GraphP
                     .style('font-weight', '600')
                     .style('pointer-events', 'none')
                     .style('fill', seriesItem.color)
-                    .text(seriesItem.name)
+                    .text(seriesItem.label)
                 const labelWidth = (label.node() as SVGTextElement).getComputedTextLength()
                 const lx = Math.min(Math.max(top.x - labelWidth / 2, 0), Math.max(width - labelWidth, 0))
                 label.attr('x', lx)
@@ -253,7 +254,7 @@ export function MetricsGraph({ series, onClickTimePoint, onSelectRange }: GraphP
                     <label key={s.name} className="flex items-center gap-2 cursor-pointer">
                         <input type="radio" name="series-focus" checked={activeSeries === s.name} onChange={() => setActiveSeries(s.name)} />
                         <span className="inline-block w-3 h-3 rounded-sm" style={{ background: s.color }} />
-                        <span>{s.name}</span>
+                        <span>{s.label}</span>
                     </label>
                 ))}
             </div>

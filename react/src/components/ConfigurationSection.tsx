@@ -15,6 +15,7 @@ interface MetricConfig {
 
 interface AvailableMetric {
     name: string
+    alias?: string
     description?: string
     componentType?: string
 }
@@ -62,6 +63,7 @@ export function ConfigurationSection({ configs, onChange, onSave, availableMetri
     const metadataByName = new Map((availableMetrics || []).map((m) => [m.name, m]))
     const joinedConfigs = localConfigs.map((c) => ({
         ...c,
+        alias: metadataByName.get(c.name)?.alias || c.name,
         componentType: metadataByName.get(c.name)?.componentType || 'OTHER',
     }))
     const allTypes = Array.from(new Set(joinedConfigs.filter((c) => !!c.name).map((c) => c.componentType))).sort(
@@ -76,9 +78,9 @@ export function ConfigurationSection({ configs, onChange, onSave, availableMetri
         (config) => !!config.name && !config.name.includes('count') && !config.name.includes('total_bytes')
     )
 
-    // Further filter by the alias search term (case-insensitive substring match)
+    // Further filter by alias or name (case-insensitive substring match)
     const nameFiltered = searchTerm.trim()
-        ? visibleConfigs.filter((config) => config.name.toLowerCase().includes(searchTerm.trim().toLowerCase()))
+        ? visibleConfigs.filter((config) => `${config.alias} ${config.name}`.toLowerCase().includes(searchTerm.trim().toLowerCase()))
         : visibleConfigs
 
     const typeFiltered = selectedTypes.length > 0
@@ -87,7 +89,7 @@ export function ConfigurationSection({ configs, onChange, onSave, availableMetri
 
     const displayMetrics = sortBy === 'type-name'
         ? [...typeFiltered].sort(
-            (a, b) => a.componentType.localeCompare(b.componentType) || a.name.localeCompare(b.name),
+            (a, b) => a.componentType.localeCompare(b.componentType) || a.alias.localeCompare(b.alias),
         )
         : typeFiltered
 
@@ -192,7 +194,7 @@ export function ConfigurationSection({ configs, onChange, onSave, availableMetri
                                         onCheckedChange={() => handleToggleEnabled(config.name)}
                                     />
                                     <span className={`font-medium ${!config.enabled ? 'text-muted-foreground line-through' : ''}`}>
-                                        {config.name}
+                                        {config.alias}
                                     </span>
                                 </div>
 

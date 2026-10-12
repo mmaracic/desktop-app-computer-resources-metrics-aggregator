@@ -13,7 +13,7 @@ function App() {
 
   const [metricsData, setMetricsData] = useState<MetricData[]>([])
   const [configs, setConfigs] = useState<MetricConfig[]>([])
-  const [availableMetrics, setAvailableMetrics] = useState<Array<{ name: string; description?: string; componentType?: string }>>([])
+  const [availableMetrics, setAvailableMetrics] = useState<Array<{ name: string; alias?: string; description?: string; componentType?: string }>>([])
   const [selectedTimestamp, setSelectedTimestamp] = useState<string | null>(null)
   const [selectedMetrics, setSelectedMetrics] = useState<Array<{ name: string; value: unknown; description?: string; componentType?: string }>>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -92,7 +92,8 @@ function App() {
 
         // Convert metadata Map to array format for ConfigurationSection
         const metricsList = Array.from(metadata.values()).map(meta => ({
-          name: meta.alias,
+          name: meta.name,
+          alias: meta.alias,
           description: meta.description,
           componentType: meta.component_type,
         }))
@@ -191,18 +192,19 @@ function App() {
   const enabledMetrics = effectiveConfigs.filter((c) => c.enabled)
 
   // Group metrics by name to create time series with all data points
-  const metricsBySeries: Record<string, { color: string; componentType: string; data: Array<{ timestamp: string; value: number }> }> = {}
+  const metricsBySeries: Record<string, { label: string; color: string; componentType: string; data: Array<{ timestamp: string; value: number }> }> = {}
 
   if (metricsData.length > 0) {
     metricsData.forEach((timeBatch) => {
       timeBatch.metrics.forEach((metric) => {
-        // Configs are keyed by alias (from metadata), not the raw technical metric name
-        const seriesName = metric.metadata?.alias || metric.name
+        // Configs and series are keyed by the metric name; the alias is display-only
+        const seriesName = metric.name
         const config = enabledMetrics.find((c) => c.name === seriesName)
         const componentType = metric.metadata?.component_type || 'OTHER'
         if (config && componentType !== 'PROCESS' && typeof metric.value === 'number') {
           if (!metricsBySeries[seriesName]) {
             metricsBySeries[seriesName] = {
+              label: metric.metadata?.alias || metric.name,
               color: config.color,
               componentType,
               data: [],
@@ -233,8 +235,8 @@ function App() {
     const batch = metricsData.find((m) => m.stored_at === timestamp)
     if (!batch) return []
 
-    // Return all metrics from the batch, not just enabled ones
-    return batch.metrics.map(m => ({
+    const disabled = new Set(effectiveConfigs.filter((c) => !c.enabled).map((c) => c.name))
+    return batch.metrics.filter(m => !disabled.has(m.name)).map(m => ({
       name: m.metadata?.alias || m.name,
       description: m.metadata?.description,
       componentType: m.metadata?.component_type,

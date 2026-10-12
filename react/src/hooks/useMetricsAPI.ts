@@ -91,7 +91,7 @@ export const useMetricsAPI = () => {
             // Convert array to Map for efficient lookup by the raw metric name (matches metric.name from /metrics/range)
             const metadataMap = new Map<string, MetricMetadata>()
             for (const meta of response.data) {
-                metadataMap.set(meta.name, splitGpuType(meta.name, meta))
+                metadataMap.set(meta.name, { ...splitGpuType(meta.name, meta), alias: convertAlias(meta.name, meta.alias) })
             }
             return metadataMap
         } catch (error: any) {
