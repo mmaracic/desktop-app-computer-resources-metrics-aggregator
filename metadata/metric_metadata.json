@@ -2,7 +2,7 @@
     "card0_gpu_busy_percent": {
         "metric_type": "FLOAT",
         "minimal_delta": 0.5,
-        "alias": "GPU 0 utilization percentage",
+        "alias": "GPU 0 Raphael utilization percentage",
         "description": "Shows how much the GPU is actively processing graphics workloads",
         "component_type": "GPU",
         "warning_threshold": 85.0,
@@ -11,7 +11,7 @@
     "card1_gpu_busy_percent": {
         "metric_type": "FLOAT",
         "minimal_delta": 0.5,
-        "alias": "GPU 1 utilization percentage",
+        "alias": "GPU 1 Radeon utilization percentage",
         "description": "Shows how much the GPU is actively processing graphics workloads",
         "component_type": "GPU",
         "warning_threshold": 85.0,
@@ -20,7 +20,7 @@
     "card0_gtt_utilization_percent": {
         "metric_type": "FLOAT",
         "minimal_delta": 0.5,
-        "alias": "GPU 0 shared graphics memory usage percentage",
+        "alias": "GPU 0 Raphael shared graphics memory usage percentage",
         "description": "Tracks usage of system RAM allocated for GPU operations",
         "component_type": "GPU",
         "warning_threshold": 85.0,
@@ -29,7 +29,7 @@
     "card1_gtt_utilization_percent": {
         "metric_type": "FLOAT",
         "minimal_delta": 0.5,
-        "alias": "GPU 1 shared graphics memory usage percentage",
+        "alias": "GPU 1 Radeon shared graphics memory usage percentage",
         "description": "Tracks usage of system RAM allocated for GPU operations",
         "component_type": "GPU",
         "warning_threshold": 85.0,
@@ -38,7 +38,7 @@
     "card0_gpu_clock_mhz": {
         "metric_type": "INTEGER",
         "minimal_delta": 1,
-        "alias": "GPU 0 current clock frequency in MHz",
+        "alias": "GPU 0 Raphael current clock frequency in MHz",
         "description": "Indicates the GPU's operating speed for graphics processing",
         "component_type": "GPU",
         "warning_threshold": null,
@@ -47,7 +47,7 @@
     "card1_gpu_clock_mhz": {
         "metric_type": "INTEGER",
         "minimal_delta": 1,
-        "alias": "GPU 1 current clock frequency in MHz",
+        "alias": "GPU 1 Radeon current clock frequency in MHz",
         "description": "Indicates the GPU's operating speed for graphics processing",
         "component_type": "GPU",
         "warning_threshold": null,
@@ -56,7 +56,7 @@
     "card0_gpu_power_milliwatts": {
         "metric_type": "INTEGER",
         "minimal_delta": 1,
-        "alias": "GPU 0 current power consumption in mW",
+        "alias": "GPU 0 Raphael current power consumption in mW",
         "description": "Shows how much electrical power the GPU is currently using",
         "component_type": "GPU",
         "warning_threshold": null,
@@ -65,7 +65,7 @@
     "card1_gpu_power_milliwatts": {
         "metric_type": "INTEGER",
         "minimal_delta": 1,
-        "alias": "GPU 1 current power consumption in mW",
+        "alias": "GPU 1 Radeon current power consumption in mW",
         "description": "Shows how much electrical power the GPU is currently using",
         "component_type": "GPU",
         "warning_threshold": null,
@@ -74,7 +74,7 @@
     "card0_gpu_memory_clock_mhz": {
         "metric_type": "INTEGER",
         "minimal_delta": 1,
-        "alias": "GPU 0 memory clock frequency in MHz",
+        "alias": "GPU 0 Raphael memory clock frequency in MHz",
         "description": "Indicates the speed of GPU video memory operations",
         "component_type": "GPU",
         "warning_threshold": null,
@@ -83,11 +83,47 @@
     "card1_gpu_memory_clock_mhz": {
         "metric_type": "INTEGER",
         "minimal_delta": 1,
-        "alias": "GPU 1 memory clock frequency in MHz",
+        "alias": "GPU 1 Radeon memory clock frequency in MHz",
         "description": "Indicates the speed of GPU video memory operations",
         "component_type": "GPU",
         "warning_threshold": null,
         "critical_threshold": null
+    },
+    "card0_vram_utilization_percent": {
+        "metric_type": "FLOAT",
+        "minimal_delta": 0.5,
+        "alias": "GPU 0 Raphael dedicated video memory usage percentage",
+        "description": "Tracks usage of memory dedicated to the GPU (not shared system RAM)",
+        "component_type": "GPU",
+        "warning_threshold": 85.0,
+        "critical_threshold": 95.0
+    },
+    "card1_vram_utilization_percent": {
+        "metric_type": "FLOAT",
+        "minimal_delta": 0.5,
+        "alias": "GPU 1 Radeon dedicated video memory usage percentage",
+        "description": "Tracks usage of memory dedicated to the GPU (not shared system RAM)",
+        "component_type": "GPU",
+        "warning_threshold": 85.0,
+        "critical_threshold": 95.0
+    },
+    "card0_gpu_temperature_celsius": {
+        "metric_type": "FLOAT",
+        "minimal_delta": 0.5,
+        "alias": "GPU 0 Raphael temperature",
+        "description": "Edge temperature of the GPU",
+        "component_type": "GPU",
+        "warning_threshold": 85.0,
+        "critical_threshold": 95.0
+    },
+    "card1_gpu_temperature_celsius": {
+        "metric_type": "FLOAT",
+        "minimal_delta": 0.5,
+        "alias": "GPU 1 Radeon temperature",
+        "description": "Junction temperature of the GPU",
+        "component_type": "GPU",
+        "warning_threshold": 85.0,
+        "critical_threshold": 95.0
     },
     "cpu_usage_percent": {
         "metric_type": "FLOAT",

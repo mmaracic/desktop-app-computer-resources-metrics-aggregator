@@ -53,15 +53,6 @@
         "warning_threshold": 70.0,
         "critical_threshold": 85.0
     },
-    "temperature_amdgpu": {
-        "metric_type": "FLOAT",
-        "minimal_delta": 0.5,
-        "alias": "AMD GPU temperature",
-        "description": "Junction temperature of AMD graphics card",
-        "component_type": "GPU",
-        "warning_threshold": 80.0,
-        "critical_threshold": 95.0
-    },
     "temperature_nvidia": {
         "metric_type": "FLOAT",
         "minimal_delta": 0.5,

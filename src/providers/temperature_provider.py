@@ -14,6 +14,9 @@ class TemperatureProvider(MetricProvider):
         # Temperatures
         sensors = psutil.sensors_temperatures()
         for name, temps in sensors.items():
+            # amdgpu is reported per card by AtiGpuProvider
+            if name == "amdgpu":
+                continue
             for temp in temps:
                 metrics.extend(
                     [

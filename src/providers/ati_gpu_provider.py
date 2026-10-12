@@ -31,7 +31,27 @@ class AtiGpuProvider(MetricProvider):
                 ),
             )
 
-            # VRAM metrics - already covered by TemperatureProvider's broader sensor approach, skip to avoid duplication
+            vram_total = self._read_sysfs(path, "mem_info_vram_total")
+            vram_used = self._read_sysfs(path, "mem_info_vram_used")
+            if vram_total > 0:
+                metrics.append(
+                    self.createMetric(
+                        name=f"{card}_vram_utilization_percent",
+                        value=float(vram_used) / float(vram_total) * 100.0,
+                        metadata=metadata,
+                    ),
+                )
+
+            hwmon = self._find_hwmon(path)
+            temp = self._read_hwmon(hwmon, ["temp2_input", "temp1_input"])
+            if temp is not None:
+                metrics.append(
+                    self.createMetric(
+                        name=f"{card}_gpu_temperature_celsius",
+                        value=temp / 1000.0,
+                        metadata=metadata,
+                    ),
+                )
 
             # GTT (Graphics Translation Table) memory - unique to GPU, not duplicated elsewhere
             gtt_total = self._read_sysfs(path, "mem_info_gtt_total")
@@ -46,54 +66,55 @@ class AtiGpuProvider(MetricProvider):
                 )
 
             # GPU Clock Frequency - unique metric not covered by other providers
-            try:
-                freq_path = f"{path}/hwmon/hwmon5/freq1_input"
-                if Path(freq_path).exists():
-                    with open(freq_path, encoding="utf-8") as f:
-                        freq_mhz = int(f.read().strip())
-                    metrics.append(
-                        self.createMetric(
-                            name=f"{card}_gpu_clock_mhz",
-                            value=freq_mhz,
-                            metadata=metadata,
-                        ),
-                    )
-            except (ValueError, OSError):
-                pass
+            freq_hz = self._read_hwmon(hwmon, ["freq1_input"])
+            if freq_hz is not None:
+                metrics.append(
+                    self.createMetric(
+                        name=f"{card}_gpu_clock_mhz",
+                        value=freq_hz // 1_000_000,
+                        metadata=metadata,
+                    ),
+                )
 
             # GPU Power Consumption - unique metric not covered by other providers
-            try:
-                power_path = f"{path}/hwmon/hwmon5/power1_input"
-                if Path(power_path).exists():
-                    with open(power_path, encoding="utf-8") as f:
-                        power_milliwatts = int(f.read().strip())
-                    metrics.append(
-                        self.createMetric(
-                            name=f"{card}_gpu_power_milliwatts",
-                            value=power_milliwatts,
-                            metadata=metadata,
-                        ),
-                    )
-            except (ValueError, OSError):
-                pass
+            # hwmon reports microwatts; discrete cards expose power1_average instead of power1_input
+            power_uw = self._read_hwmon(hwmon, ["power1_input", "power1_average"])
+            if power_uw is not None:
+                metrics.append(
+                    self.createMetric(
+                        name=f"{card}_gpu_power_milliwatts",
+                        value=power_uw // 1000,
+                        metadata=metadata,
+                    ),
+                )
 
             # GPU Memory Clock Frequency - unique metric for memory subsystem
-            try:
-                mem_freq_path = f"{path}/hwmon/hwmon5/freq2_input"
-                if Path(mem_freq_path).exists():
-                    with open(mem_freq_path, encoding="utf-8") as f:
-                        mem_freq_mhz = int(f.read().strip())
-                    metrics.append(
-                        self.createMetric(
-                            name=f"{card}_gpu_memory_clock_mhz",
-                            value=mem_freq_mhz,
-                            metadata=metadata,
-                        ),
-                    )
-            except (ValueError, OSError):
-                pass
+            mem_freq_hz = self._read_hwmon(hwmon, ["freq2_input"])
+            if mem_freq_hz is not None:
+                metrics.append(
+                    self.createMetric(
+                        name=f"{card}_gpu_memory_clock_mhz",
+                        value=mem_freq_hz // 1_000_000,
+                        metadata=metadata,
+                    ),
+                )
 
         return metrics
+
+    def _find_hwmon(self, device_path: str) -> Path | None:
+        # hwmon index differs per card and boot, so discover it
+        hwmons = sorted(Path(device_path, "hwmon").glob("hwmon*"))
+        return hwmons[0] if hwmons else None
+
+    def _read_hwmon(self, hwmon: Path | None, filenames: list[str]) -> int | None:
+        if hwmon is None:
+            return None
+        for filename in filenames:
+            try:
+                return int((hwmon / filename).read_text(encoding="utf-8").strip())
+            except (ValueError, OSError):
+                continue
+        return None
 
     def _read_sysfs(self, path: str, filename: str) -> int:
         full_path = Path(path) / filename
