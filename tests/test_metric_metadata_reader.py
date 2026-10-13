@@ -21,6 +21,7 @@ def test_read_returns_dict_keyed_by_metric_name(tmp_path: Path) -> None:
         {
             "cpu_usage_percent": {
                 "metric_type": "FLOAT",
+                "metric_unit": "PERCENT",
                 "alias": "Overall CPU utilization percentage",
                 "description": "Shows how much CPU capacity is currently being used",
                 "component_type": "CPU",
@@ -48,6 +49,7 @@ def test_read_handles_missing_warning_critical_values(tmp_path: Path) -> None:
         {
             "temperature_acpitz": {
                 "metric_type": "FLOAT",
+                "metric_unit": "PERCENT",
                 "alias": "System temperature",
                 "description": "Temperature reading from acpitz sensor",
                 "component_type": "MOTHERBOARD",
@@ -70,6 +72,7 @@ def test_read_returns_entry_per_metric(tmp_path: Path) -> None:
         {
             "gpu_busy_percent": {
                 "metric_type": "FLOAT",
+                "metric_unit": "PERCENT",
                 "alias": "GPU utilization percentage",
                 "description": "Shows how much the GPU is actively processing",
                 "component_type": "GPU",
@@ -78,6 +81,7 @@ def test_read_returns_entry_per_metric(tmp_path: Path) -> None:
             },
             "network_bytes_sent": {
                 "metric_type": "INTEGER",
+                "metric_unit": "BYTES",
                 "alias": "Total network bytes transmitted",
                 "description": "Cumulative count of data sent",
                 "component_type": "NETWORK",

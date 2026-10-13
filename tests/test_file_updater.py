@@ -8,6 +8,7 @@ from src.metric.model.component_type import ComponentType
 from src.metric.model.metric import Metric
 from src.metric.model.metric_metadata import MetricMetadata
 from src.metric.model.metric_type import MetricType
+from src.metric.model.metric_unit import MetricUnit
 from src.storage.disk_text_file_storage import DiskTextFileStorage
 from src.updaters.file_updater import FileUpdater, MetricsInTime
 
@@ -19,6 +20,7 @@ def _build_metric(name: str, value: float) -> Metric:
         value=value,
         metadata=MetricMetadata(
             metric_type=MetricType.FLOAT,
+            metric_unit=MetricUnit.PERCENT,
             alias=name,
             description=name,
             component_type=ComponentType.CPU,

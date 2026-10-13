@@ -8,6 +8,7 @@ from src.metric.model.component_type import ComponentType
 from src.metric.model.metric import Metric
 from src.metric.model.metric_metadata import MetricMetadata
 from src.metric.model.metric_type import MetricType
+from src.metric.model.metric_unit import MetricUnit
 from src.metric.model.metrics_in_time import MetricsInTime
 from src.observers.aggregation_observer import AggregationObserver
 
@@ -33,6 +34,7 @@ def _build_metric(name: str, value: float) -> Metric:
         value=value,
         metadata=MetricMetadata(
             metric_type=MetricType.FLOAT,
+            metric_unit=MetricUnit.PERCENT,
             minimal_delta=0.5,
             alias=name,
             description=name,
@@ -132,6 +134,7 @@ def test_update_filters_out_none_values() -> None:
             value=None,
             metadata=MetricMetadata(
                 metric_type=MetricType.FLOAT,
+                metric_unit=MetricUnit.PERCENT,
                 minimal_delta=0.5,
                 alias="memory_usage_percent",
                 description="memory usage percent",
@@ -295,6 +298,7 @@ def test_update_handles_multiple_component_types() -> None:
             value=65.0,
             metadata=MetricMetadata(
                 metric_type=MetricType.FLOAT,
+                metric_unit=MetricUnit.PERCENT,
                 minimal_delta=1.0,
                 alias="GPU Temperature",
                 description="GPU temperature in Celsius",
@@ -314,6 +318,7 @@ def test_update_handles_multiple_component_types() -> None:
             value=67.0,
             metadata=MetricMetadata(
                 metric_type=MetricType.FLOAT,
+                metric_unit=MetricUnit.PERCENT,
                 minimal_delta=1.0,
                 alias="GPU Temperature",
                 description="GPU temperature in Celsius",
@@ -342,6 +347,7 @@ def _build_dict_metric(name: str, value: dict[str, Any]) -> Metric:
         value=value,
         metadata=MetricMetadata(
             metric_type=MetricType.DICT,
+            metric_unit=MetricUnit.PERCENT,
             minimal_delta=0.5,
             alias=name,
             description=name,
@@ -467,6 +473,7 @@ def test_update_filters_out_none_values_in_dict_metrics() -> None:
             value=None,
             metadata=MetricMetadata(
                 metric_type=MetricType.DICT,
+                metric_unit=MetricUnit.PERCENT,
                 minimal_delta=0.5,
                 alias="memory_details",
                 description="memory details",

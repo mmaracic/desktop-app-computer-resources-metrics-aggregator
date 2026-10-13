@@ -10,6 +10,7 @@ import pytest
 
 from src.metric.model.component_type import ComponentType
 from src.metric.model.metric_type import MetricType
+from src.metric.model.metric_unit import MetricUnit
 from src.metric.model.metrics_in_time import MetricsInTime
 from src.samplers.uniform_metric_sampler import UniformMetricSampler
 
@@ -18,6 +19,7 @@ def create_metadata(alias: str = "Test", description: str = "Test metric") -> di
     """Create a dictionary for MetricMetadata with required fields."""
     return {
         "metric_type": MetricType.FLOAT,
+        "metric_unit": MetricUnit.PERCENT,
         "alias": alias,
         "description": description,
         "component_type": ComponentType.CPU,

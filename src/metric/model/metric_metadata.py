@@ -4,6 +4,7 @@ from pydantic import BaseModel, Field, field_serializer, field_validator
 
 from .component_type import ComponentType
 from .metric_type import MetricType
+from .metric_unit import MetricUnit
 
 
 class MetricMetadata(BaseModel):
@@ -20,6 +21,7 @@ class MetricMetadata(BaseModel):
     """
 
     metric_type: MetricType
+    metric_unit: MetricUnit
     alias: str
     description: str
     component_type: ComponentType
@@ -40,8 +42,12 @@ class MetricMetadata(BaseModel):
         """Serialize the metric type enum to its plain name for JSON output."""
         return metric_type.name
 
+    @field_serializer("metric_unit")
+    def _serialize_metric_unit(self, metric_unit: MetricUnit) -> str:
+        """Serialize the metric unit enum to its plain name for JSON output."""
+        return metric_unit.name
+
     @field_serializer("component_type")
     def _serialize_component_type(self, component_type: ComponentType) -> str:
         """Serialize the component type enum to its plain name for JSON output."""
         return component_type.name
-

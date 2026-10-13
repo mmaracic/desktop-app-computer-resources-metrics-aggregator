@@ -4,6 +4,7 @@ from pathlib import Path
 from src.metric.model.component_type import ComponentType
 from src.metric.model.metric_metadata import MetricMetadata
 from src.metric.model.metric_type import MetricType
+from src.metric.model.metric_unit import MetricUnit
 
 
 class MetadataReader:
@@ -28,6 +29,7 @@ class MetadataReader:
         return {
             name: MetricMetadata(
                 metric_type=MetricType[entry["metric_type"]],
+                metric_unit=MetricUnit[entry["metric_unit"]],
                 minimal_delta=entry.get("minimal_delta"),
                 warning_threshold=entry.get("warning_threshold"),
                 critical_threshold=entry.get("critical_threshold"),

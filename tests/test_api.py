@@ -10,6 +10,7 @@ from src.config.metric_config import MetricConfig
 from src.metric.model.component_type import ComponentType
 from src.metric.model.metric_metadata import MetricMetadata
 from src.metric.model.metric_type import MetricType
+from src.metric.model.metric_unit import MetricUnit
 from src.service.metrics_service import MetricsService
 
 
@@ -22,6 +23,7 @@ def _service_with_names(names: list[str]) -> MagicMock:
 def _cpu_metadata() -> MetricMetadata:
     return MetricMetadata(
         metric_type=MetricType.FLOAT,
+        metric_unit=MetricUnit.PERCENT,
         alias="CPU Usage",
         description="CPU usage percentage",
         component_type=ComponentType.CPU,
@@ -169,6 +171,7 @@ def test_get_metrics_by_datetime_range_with_mocked_disk_storage_and_no_azure_sto
     mock_metric_metadata = {
         "cpu_usage": MetricMetadata(
             metric_type=MetricType.FLOAT,
+            metric_unit=MetricUnit.PERCENT,
             alias="CPU Usage",
             description="CPU usage percentage",
             component_type=ComponentType.CPU,
@@ -318,6 +321,7 @@ def test_get_metric_metadata_success() -> None:
     mock_metric_metadata = {
         "cpu_usage": MetricMetadata(
             metric_type=MetricType.FLOAT,
+            metric_unit=MetricUnit.PERCENT,
             alias="CPU Usage",
             description="CPU usage percentage",
             component_type=ComponentType.CPU,
@@ -326,6 +330,7 @@ def test_get_metric_metadata_success() -> None:
         ),
         "gpu_temperature": MetricMetadata(
             metric_type=MetricType.FLOAT,
+            metric_unit=MetricUnit.PERCENT,
             alias="GPU Temperature",
             description="GPU temperature in Celsius",
             component_type=ComponentType.GPU,
@@ -419,6 +424,7 @@ def test_get_metric_metadata_consistency_with_metrics_data() -> None:
     mock_metric_metadata = {
         "cpu_usage": MetricMetadata(
             metric_type=MetricType.FLOAT,
+            metric_unit=MetricUnit.PERCENT,
             alias="CPU Usage",
             description="CPU usage percentage",
             component_type=ComponentType.CPU,
