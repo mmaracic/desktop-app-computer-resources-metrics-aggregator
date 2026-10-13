@@ -5,6 +5,7 @@ const API_BASE_URL = '/api'
 export interface MetricMetadata {
     name: string
     metric_type: string
+    metric_unit: string
     alias: string
     description: string
     component_type: string
@@ -151,6 +152,7 @@ export const useMetricsAPI = () => {
                     metadata: converted || {
                         name: metricName,
                         metric_type: 'Unknown',
+                        metric_unit: 'NONE',
                         alias: metricName,
                         description: '',
                         component_type: 'Unknown',

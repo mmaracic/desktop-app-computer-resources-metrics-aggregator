@@ -18,6 +18,7 @@ function App() {
   const [selectedMetrics, setSelectedMetrics] = useState<Array<{ name: string; value: unknown; description?: string; componentType?: string }>>([])
   const [isLoading, setIsLoading] = useState(true)
   const [graphType, setGraphType] = useState<string>('')
+  const [groupBy, setGroupBy] = useState<'component_type' | 'metric_unit'>('component_type')
   const [activeTab, setActiveTab] = useState<'graph' | 'config'>('graph')
   const [loadedFromFile, setLoadedFromFile] = useState(false)
   const [theme, setTheme] = useState<'system' | 'light' | 'dark'>(
@@ -192,7 +193,7 @@ function App() {
   const enabledMetrics = effectiveConfigs.filter((c) => c.enabled)
 
   // Group metrics by name to create time series with all data points
-  const metricsBySeries: Record<string, { label: string; color: string; componentType: string; data: Array<{ timestamp: string; value: number }> }> = {}
+  const metricsBySeries: Record<string, { label: string; color: string; componentType: string; metricUnit: string; data: Array<{ timestamp: string; value: number }> }> = {}
 
   if (metricsData.length > 0) {
     metricsData.forEach((timeBatch) => {
@@ -207,6 +208,7 @@ function App() {
               label: metric.metadata?.alias || metric.name,
               color: config.color,
               componentType,
+              metricUnit: metric.metadata?.metric_unit || 'NONE',
               data: [],
             }
           }
@@ -224,11 +226,13 @@ function App() {
     name,
     ...data,
   }))
-  const componentTypes = Array.from(new Set(allSeries.map((s) => s.componentType))).sort((a, b) =>
+  const groupKey = (s: { componentType: string; metricUnit: string }) =>
+    groupBy === 'metric_unit' ? s.metricUnit : s.componentType
+  const componentTypes = Array.from(new Set(allSeries.map(groupKey))).sort((a, b) =>
     a.localeCompare(b, undefined, { numeric: true }),
   )
   const currentType = componentTypes.includes(graphType) ? graphType : componentTypes[0]
-  const series = allSeries.filter((s) => s.componentType === currentType)
+  const series = allSeries.filter((s) => groupKey(s) === currentType)
 
   // Get all metrics (enabled + disabled) for popup at a specific timestamp
   const getAllMetricsAtTimestamp = (timestamp: string): Array<{ name: string; value: unknown; description?: string; componentType?: string }> => {
@@ -296,18 +300,35 @@ function App() {
                 setCurrentEndDate(end)
               }}
               extra={
-                <div className="flex items-center gap-2 text-xs">
-                  <label htmlFor="bucket-count">Buckets</label>
-                  <select
-                    id="bucket-count"
-                    value={bucketCount}
-                    onChange={(e) => setBucketCount(Number(e.target.value))}
-                    className="h-8 rounded-md border bg-background text-foreground px-2"
-                  >
-                    {[100, 250, 500, 1000].map((n) => (
-                      <option key={n} value={n}>{n}</option>
-                    ))}
-                  </select>
+                <div className="flex items-center gap-4 text-xs">
+                  <div className="flex items-center gap-2">
+                    <label htmlFor="graph-tab-type">Graph tab type</label>
+                    <select
+                      id="graph-tab-type"
+                      value={groupBy}
+                      onChange={(e) => {
+                        setGroupBy(e.target.value as 'component_type' | 'metric_unit')
+                        setGraphType('')
+                      }}
+                      className="h-8 rounded-md border bg-background text-foreground px-2"
+                    >
+                      <option value="component_type">Component type</option>
+                      <option value="metric_unit">Metric unit</option>
+                    </select>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <label htmlFor="bucket-count">Buckets</label>
+                    <select
+                      id="bucket-count"
+                      value={bucketCount}
+                      onChange={(e) => setBucketCount(Number(e.target.value))}
+                      className="h-8 rounded-md border bg-background text-foreground px-2"
+                    >
+                      {[100, 250, 500, 1000].map((n) => (
+                        <option key={n} value={n}>{n}</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
               }
             />
@@ -377,7 +398,7 @@ function App() {
             onClose={() => setSelectedTimestamp(null)}
             timestamp={selectedTimestamp}
             metrics={selectedMetrics}
-            initialTab={currentType}
+            initialTab={groupBy === 'component_type' ? currentType : undefined}
           />
         )}
       </div>
