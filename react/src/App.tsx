@@ -19,6 +19,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(true)
   const [graphType, setGraphType] = useState<string>('')
   const [groupBy, setGroupBy] = useState<'component_type' | 'metric_unit'>('component_type')
+  const [selectorMode, setSelectorMode] = useState<'radio' | 'checkbox'>('radio')
   const [activeTab, setActiveTab] = useState<'graph' | 'config'>('graph')
   const [loadedFromFile, setLoadedFromFile] = useState(false)
   const [theme, setTheme] = useState<'system' | 'light' | 'dark'>(
@@ -317,6 +318,18 @@ function App() {
                     </select>
                   </div>
                   <div className="flex items-center gap-2">
+                    <label htmlFor="graph-selector">Graph selector</label>
+                    <select
+                      id="graph-selector"
+                      value={selectorMode}
+                      onChange={(e) => setSelectorMode(e.target.value as 'radio' | 'checkbox')}
+                      className="h-8 rounded-md border bg-background text-foreground px-2"
+                    >
+                      <option value="radio">Radio</option>
+                      <option value="checkbox">Checkbox</option>
+                    </select>
+                  </div>
+                  <div className="flex items-center gap-2">
                     <label htmlFor="bucket-count">Buckets</label>
                     <select
                       id="bucket-count"
@@ -372,6 +385,7 @@ function App() {
             {!isLoading && series.length > 0 && (
               <MetricsGraph
                 series={series}
+                selectorMode={selectorMode}
                 onClickTimePoint={handleTimePointClick}
                 onSelectRange={(start, end) => setGraphSelection({ start, end, id: Date.now() })}
               />

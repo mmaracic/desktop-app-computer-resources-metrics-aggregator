@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from 'react'
+import { useRef, useEffect, useState, useMemo } from 'react'
 // @ts-ignore - D3 types are complex and cause issues with strict mode
 import * as d3 from 'd3'
 import { Card } from './ui/card'
@@ -12,11 +12,19 @@ interface MetricSeries {
 
 interface GraphProps {
     series: MetricSeries[]
+    selectorMode?: 'radio' | 'checkbox'
     onClickTimePoint: (timestamp: string) => void
     onSelectRange?: (startMs: number, endMs: number) => void
 }
 
-export function MetricsGraph({ series, onClickTimePoint, onSelectRange }: GraphProps) {
+export function MetricsGraph({ series: allSeries, selectorMode = 'radio', onClickTimePoint, onSelectRange }: GraphProps) {
+    // Series unchecked in checkbox mode; all are checked by default
+    const [hidden, setHidden] = useState<Set<string>>(new Set())
+    const series = useMemo(
+        () => (selectorMode === 'checkbox' ? allSeries.filter((s) => !hidden.has(s.name)) : allSeries),
+        [allSeries, selectorMode, hidden],
+    )
+
     const svgRef = useRef<SVGSVGElement>(null)
     const onSelectRangeRef = useRef(onSelectRange)
     useEffect(() => {
@@ -25,6 +33,11 @@ export function MetricsGraph({ series, onClickTimePoint, onSelectRange }: GraphP
     const [dimensions, setDimensions] = useState({ width: 800, height: 500 })
     // null means "All": every line shown, Y scale fitted to all of them
     const [activeSeries, setActiveSeries] = useState<string | null>(null)
+
+    useEffect(() => {
+        setHidden(new Set())
+        setActiveSeries(null)
+    }, [selectorMode])
 
     useEffect(() => {
         if (activeSeries !== null && !series.some((s) => s.name === activeSeries)) setActiveSeries(null)
@@ -47,7 +60,11 @@ export function MetricsGraph({ series, onClickTimePoint, onSelectRange }: GraphP
     }, [])
 
     useEffect(() => {
-        if (!svgRef.current || series.length === 0) return
+        if (!svgRef.current) return
+        if (series.length === 0) {
+            d3.select(svgRef.current).selectAll('*').remove()
+            return
+        }
 
         const svg = d3.select(svgRef.current)
         const margin = { top: 40, right: 30, bottom: 60, left: 80 }
@@ -245,14 +262,28 @@ export function MetricsGraph({ series, onClickTimePoint, onSelectRange }: GraphP
     return (
         <Card className="p-4 flex flex-col gap-4">
             <svg ref={svgRef} width="100%" height={500} style={{ height: '500px', minHeight: '500px' }} />
-            <div role="radiogroup" className="flex flex-row flex-wrap gap-x-4 gap-y-2 text-sm">
-                <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="radio" name="series-focus" checked={activeSeries === null} onChange={() => setActiveSeries(null)} />
-                    <span>All</span>
-                </label>
-                {series.map((s) => (
+            <div role={selectorMode === 'radio' ? 'radiogroup' : 'group'} className="flex flex-row flex-wrap gap-x-4 gap-y-2 text-sm">
+                {selectorMode === 'radio' && (
+                    <label className="flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="series-focus" checked={activeSeries === null} onChange={() => setActiveSeries(null)} />
+                        <span>All</span>
+                    </label>
+                )}
+                {allSeries.map((s) => (
                     <label key={s.name} className="flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="series-focus" checked={activeSeries === s.name} onChange={() => setActiveSeries(s.name)} />
+                        {selectorMode === 'radio' ? (
+                            <input type="radio" name="series-focus" checked={activeSeries === s.name} onChange={() => setActiveSeries(s.name)} />
+                        ) : (
+                            <input
+                                type="checkbox"
+                                checked={!hidden.has(s.name)}
+                                onChange={() => setHidden((prev) => {
+                                    const next = new Set(prev)
+                                    if (!next.delete(s.name)) next.add(s.name)
+                                    return next
+                                })}
+                            />
+                        )}
                         <span className="inline-block w-3 h-3 rounded-sm" style={{ background: s.color }} />
                         <span>{s.label}</span>
                     </label>
