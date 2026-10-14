@@ -5,6 +5,7 @@ import { Input } from './ui/input'
 import { Checkbox } from './ui/checkbox'
 import { Card } from './ui/card'
 import { Separator } from './ui/separator'
+import { OTHER_TYPE } from '../lib/utils'
 
 interface MetricConfig {
     name: string
@@ -64,7 +65,7 @@ export function ConfigurationSection({ configs, onChange, onSave, availableMetri
     const joinedConfigs = localConfigs.map((c) => ({
         ...c,
         alias: metadataByName.get(c.name)?.alias || c.name,
-        componentType: metadataByName.get(c.name)?.componentType || 'OTHER',
+        componentType: metadataByName.get(c.name)?.componentType || OTHER_TYPE,
     }))
     const allTypes = Array.from(new Set(joinedConfigs.filter((c) => !!c.name).map((c) => c.componentType))).sort(
         (a, b) => a.localeCompare(b, undefined, { numeric: true }),

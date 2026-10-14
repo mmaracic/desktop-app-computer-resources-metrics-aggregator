@@ -5,8 +5,7 @@ import { MetricsGraph } from './components/MetricsGraph'
 import { ConfigurationSection } from './components/ConfigurationSection'
 import { MetricPopup } from './components/MetricPopup'
 import { Card } from './components/ui/card'
-
-const API_BASE_URL = '/api'
+import { API_BASE_URL, DEFAULT_BUCKET_COUNT, DEFAULT_PRESET_HOURS, OTHER_TYPE, PROCESS_TYPE, formatISOWithTZ } from './lib/utils'
 
 function App() {
   const { getMetricsByRange, getMetricMetadata, getMetricConfigs, saveMetricConfigs, joinMetadataWithMetrics } = useMetricsAPI()
@@ -52,26 +51,11 @@ function App() {
   // Time range state
   const [currentStartDate, setCurrentStartDate] = useState<string>('')
   const [currentEndDate, setCurrentEndDate] = useState<string>('')
-  const [bucketCount, setBucketCount] = useState<number>(100)
+  const [bucketCount, setBucketCount] = useState<number>(DEFAULT_BUCKET_COUNT)
   const [graphSelection, setGraphSelection] = useState<{ start: number; end: number; id: number } | null>(null)
 
-  // Time range formatting helper
-  const formatISOWithTZ = (date: Date): string => {
-    const year = date.getFullYear()
-    const month = String(date.getMonth() + 1).padStart(2, '0')
-    const day = String(date.getDate()).padStart(2, '0')
-    const hours = String(date.getHours()).padStart(2, '0')
-    const minutes = String(date.getMinutes()).padStart(2, '0')
-    const seconds = String(date.getSeconds()).padStart(2, '0')
-    const tzOffset = date.getTimezoneOffset() * 60000
-    const tzSign = tzOffset >= 0 ? '-' : '+'
-    const tzHours = String(Math.abs(tzOffset / 3600000)).padStart(2, '0')
-    const tzMinutes = String(Math.abs((tzOffset % 3600000) / 60000)).padStart(2, '0')
-    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}${tzSign}${tzHours}:${tzMinutes}`
-  }
-
   const now = new Date()
-  const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000)
+  const defaultStart = new Date(now.getTime() - DEFAULT_PRESET_HOURS * 60 * 60 * 1000)
 
   // Fetch all data on mount or when time range changes
   useEffect(() => {
@@ -80,8 +64,8 @@ function App() {
         setIsLoading(true)
         setError(null)
 
-        // Use current time range if set, otherwise default to last 24 hours
-        const startDatetime = currentStartDate || formatISOWithTZ(twentyFourHoursAgo)
+        // Use current time range if set, otherwise default to last DEFAULT_PRESET_HOURS hours
+        const startDatetime = currentStartDate || formatISOWithTZ(defaultStart)
         const endDatetime = currentEndDate || formatISOWithTZ(now)
 
         console.log('📡 Fetching metrics from:', `${API_BASE_URL}/metrics/range`)
@@ -202,8 +186,8 @@ function App() {
         // Configs and series are keyed by the metric name; the alias is display-only
         const seriesName = metric.name
         const config = enabledMetrics.find((c) => c.name === seriesName)
-        const componentType = metric.metadata?.component_type || 'OTHER'
-        if (config && componentType !== 'PROCESS' && typeof metric.value === 'number') {
+        const componentType = metric.metadata?.component_type || OTHER_TYPE
+        if (config && componentType !== PROCESS_TYPE && typeof metric.value === 'number') {
           if (!metricsBySeries[seriesName]) {
             metricsBySeries[seriesName] = {
               label: metric.metadata?.alias || metric.name,
@@ -296,6 +280,12 @@ function App() {
           <Card className="px-4 py-3">
             <TimeRangePicker
               externalRange={graphSelection}
+              onReset={() => {
+                setGroupBy('component_type')
+                setGraphType('')
+                setSelectorMode('radio')
+                setBucketCount(DEFAULT_BUCKET_COUNT)
+              }}
               onTimeRangeChange={(start, end) => {
                 setCurrentStartDate(start)
                 setCurrentEndDate(end)

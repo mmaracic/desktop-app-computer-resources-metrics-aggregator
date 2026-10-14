@@ -3,6 +3,7 @@ import { X } from 'lucide-react'
 import { Button } from './ui/button'
 import { Card } from './ui/card'
 import { Badge } from './ui/badge'
+import { OTHER_TYPE, PROCESS_TYPE } from '../lib/utils'
 
 interface MetricValue {
     readonly name: string
@@ -18,9 +19,6 @@ interface PopupProps {
     readonly metrics: MetricValue[]
     readonly initialTab?: string
 }
-
-const PROCESS_TYPE = 'PROCESS'
-const OTHER_TYPE = 'OTHER'
 
 // Values may be objects/arrays, which React cannot render directly.
 const formatValue = (value: unknown): string => {

@@ -1,6 +1,5 @@
 import axios from 'axios'
-
-const API_BASE_URL = '/api'
+import { API_BASE_URL, DEFAULT_BUCKET_COUNT } from '../lib/utils'
 
 export interface MetricMetadata {
     name: string
@@ -56,7 +55,7 @@ export const useMetricsAPI = () => {
         startDatetime: string,
         endDatetime: string,
         containerName?: string,
-        bucketCount: number = 100
+        bucketCount: number = DEFAULT_BUCKET_COUNT
     ): Promise<MetricData[]> => {
         console.log('📡 [useMetricsAPI] Calling /api/metrics/range')
         console.log('   Params:', { start_datetime: startDatetime, end_datetime: endDatetime, container_name: containerName })

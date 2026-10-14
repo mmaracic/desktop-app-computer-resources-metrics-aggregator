@@ -4,34 +4,30 @@ import { Button } from './ui/button'
 import { Input } from './ui/input'
 import { Label } from './ui/label'
 import { Checkbox } from './ui/checkbox'
+import { DEFAULT_PRESET_HOURS, formatISOWithTZ } from '../lib/utils'
 
 interface TimeRangePickerProps {
     readonly onTimeRangeChange: (start: string, end: string) => void
     readonly extra?: React.ReactNode
     // Range chosen on the graph; id changes on every new selection
     readonly externalRange?: { start: number; end: number; id: number } | null
+    readonly onReset?: () => void
 }
 
 type PresetDuration = '1h' | '3h' | '6h' | '12h' | '24h' | '168h'
 
-// Backend expects full ISO 8601 with seconds and a UTC offset (e.g. 2026-09-28T00:31:00+02:00)
-const toISOWithOffset = (dateStr: string, timeStr: string): string => {
-    if (!dateStr || !timeStr) return ''
-    const local = new Date(`${dateStr}T${timeStr}:00`)
-    const tzOffset = local.getTimezoneOffset() * 60000
-    const tzSign = tzOffset >= 0 ? '-' : '+'
-    const tzHours = String(Math.abs(tzOffset / 3600000)).padStart(2, '0')
-    const tzMinutes = String(Math.abs((tzOffset % 3600000) / 60000)).padStart(2, '0')
-    return `${dateStr}T${timeStr}:00${tzSign}${tzHours}:${tzMinutes}`
-}
+const DEFAULT_PRESET = `${DEFAULT_PRESET_HOURS}h` as PresetDuration
 
-export function TimeRangePicker({ onTimeRangeChange, extra, externalRange }: TimeRangePickerProps) {
+const toISOWithOffset = (dateStr: string, timeStr: string): string =>
+    dateStr && timeStr ? formatISOWithTZ(new Date(`${dateStr}T${timeStr}:00`)) : ''
+
+export function TimeRangePicker({ onTimeRangeChange, extra, externalRange, onReset }: TimeRangePickerProps) {
     const [startDate] = useState<string>('')
     const [endDate] = useState<string>('')
     const [startDateTime, setStartDateTime] = useState<{ date: string; time: string }>({ date: '', time: '' })
     const [endDateTime, setEndDateTime] = useState<{ date: string; time: string }>({ date: '', time: '' })
     const [isPresentSelected, setIsPresentSelected] = useState(true)
-    const [presetDuration, setPresetDuration] = useState<PresetDuration>('3h')
+    const [presetDuration, setPresetDuration] = useState<PresetDuration>(DEFAULT_PRESET)
 
     const startDateRef = useRef<HTMLInputElement>(null)
     const startTimeRef = useRef<HTMLInputElement>(null)
@@ -40,7 +36,7 @@ export function TimeRangePicker({ onTimeRangeChange, extra, externalRange }: Tim
 
     useEffect(() => {
         const now = new Date()
-        const defaultHours = 3 // Default to 3 hours when preset is checked
+        const defaultHours = DEFAULT_PRESET_HOURS
 
         const startDateObj = format(subHours(now, defaultHours), 'yyyy-MM-dd')
         const startTime = format(subHours(now, defaultHours), 'HH:mm')
@@ -50,7 +46,7 @@ export function TimeRangePicker({ onTimeRangeChange, extra, externalRange }: Tim
         setStartDateTime({ date: startDateObj, time: startTime })
         setEndDateTime({ date: endDateObj, time: endTime })
         setIsPresentSelected(true)
-        setPresetDuration('3h')
+        setPresetDuration(DEFAULT_PRESET)
     }, [])
 
     useEffect(() => {
@@ -95,16 +91,18 @@ export function TimeRangePicker({ onTimeRangeChange, extra, externalRange }: Tim
 
     const handleReset = () => {
         const now = new Date()
-        const twentyFourHoursAgo = subHours(now, 24)
+        const threeHoursAgo = subHours(now, DEFAULT_PRESET_HOURS)
 
-        const startDateObj = format(twentyFourHoursAgo, 'yyyy-MM-dd')
-        const startTime = format(twentyFourHoursAgo, 'HH:mm')
+        const startDateObj = format(threeHoursAgo, 'yyyy-MM-dd')
+        const startTime = format(threeHoursAgo, 'HH:mm')
         const endDateObj = format(now, 'yyyy-MM-dd')
         const endTime = format(now, 'HH:mm')
 
         setStartDateTime({ date: startDateObj, time: startTime })
         setEndDateTime({ date: endDateObj, time: endTime })
         setIsPresentSelected(true)
+        setPresetDuration(DEFAULT_PRESET)
+        onReset?.()
         onTimeRangeChange(toISOWithOffset(startDateObj, startTime), toISOWithOffset(endDateObj, endTime))
     }
 
