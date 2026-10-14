@@ -4,36 +4,50 @@ This is the React frontend for the Computer Resources Metrics Aggregator applica
 
 ## Features
 
+### Tabs and Theme
+- **Graph / Configuration tabs**: Switch between the graph view and metric configuration
+- **Theme selector**: System, Light or Dark; persisted in `localStorage` and applied via the `dark` class on `<html>`
+
 ### Time Range Picker
 - **Date & Time Inputs**: Select custom start and end dates/times for metrics data
-- **Present Checkbox**: When checked, automatically shows the last 24 hours of data (default)
-- **Reset Button**: Resets all pickers to show the last 24 hours when "Present" is unchecked
-- **Timezone-Aware**: Automatically adjusts timestamps based on local timezone offset
-- Auto-refreshes graph data whenever time range changes
+- **Show Present Checkbox**: Checked by default; the end date/time is locked and the range is relative to now
+- **Preset Duration**: While "Show Present" is checked, choose Last 1h / 3h (default) / 6h / 12h / 24h / 7 days
+- **Extra Controls**: Graph tab type (Component type or Metric unit), Graph selector (Radio or Checkbox), and Buckets (100, 250, 500, 1000)
+- **Reset Button**: Restores the 3-hour present range, Show Present, and the default Graph tab type, Graph selector and Buckets
+- **Timezone-Aware**: Timestamps are sent with the local timezone offset
+- Auto-refreshes graph data whenever the time range or bucket count changes
 
 ### Metrics Graph
 - **D3.js Visualization**: Interactive line graphs with smooth curves showing metric trends over time
-- **Multiple Metrics**: Displays all enabled metrics simultaneously with distinct colors
-- **Clickable Data Points**: Click anywhere on the graph to see exact values at that timestamp
-- **Hover Effects**: Data points enlarge on hover for better visibility and interaction
-- **Smooth Curves**: Uses monotone X curve interpolation for clean line rendering
-- **Dynamic Scales**: Automatically scales Y-axis based on data range (with 10% padding)
-- **Responsive Layout**: Graph resizes to fit container dimensions
+- **Grouped Tabs**: Enabled metrics are split into tabs by component type (e.g. CPU, GPU 0, GPU 1) or by metric unit
+- **Clickable Data Points**: Click a point to see all metric values at that timestamp
+- **Hover Tooltips**: Hovering a line shows its name; hovering a point shows its value and enlarges it
+- **Line Labels**: Each line is labelled above its highest point
+- **Series Selector**: In Radio mode, pick one line (or All) to fit the Y axis to it and dim the others; in Checkbox mode, toggle lines on/off
+- **Drag to Zoom**: Drag across the plot to select a time range; it is applied to the time range picker
+- **Smooth Curves**: Monotone X curve interpolation
+- **Dynamic Scales**: Y axis fits the visible data with 10% padding
+- **Unit Conversion**: Bytes are shown as MB and milliwatts as W
+- **Responsive Layout**: Graph resizes with the window
 
 ### Configuration Section
 - **Enable/Disable Metrics**: Toggle visibility of individual metrics with checkboxes
 - **Default to Enabled**: When no configuration exists, every available metric defaults to enabled
-- **Color Selection**: Choose custom colors for each metric from a preset palette (11 colors)
-- **Reordering**: Move metrics up/down using arrow buttons to change display order
-- **Disable Metrics**: Toggle metrics off (they remain in configuration but hidden from graph)
-- **Save Configuration**: Persist changes to `metric_config.json` in the metadata folder
+- **Flip All Enabled**: Invert the enabled state of every metric
+- **Filtering**: Filter by name/alias and by component type
+- **Sorting**: Sort by saved order, or by type then name
+- **Color Selection**: Pick from a 21-color preset palette or a custom RGB color
+- **Reordering**: Move metrics up/down using arrow buttons
+- **Remove Metrics**: Delete a config entry (disabled while showing the default, unsaved configuration)
+- **Save Configuration**: Persist changes through `POST /api/metrics/config`
 
 ### Popup Details
-- **Exact Values**: Shows precise values for all metrics at selected timestamp
-- **All Metrics Displayed**: Includes both enabled and disabled metrics in popup
-- **Process Metrics**: Shows process-related metrics (not displayed on graph by default)
-- **Formatted Timestamp**: Displays human-readable date/time format
-- **Scrollable List**: Handles large numbers of metrics with scrollable container
+- **Exact Values**: Shows values (2 decimals) for metrics at the selected timestamp
+- **Component Tabs**: Metrics are grouped by component type; opens on the graph's current tab when grouped by component type
+- **Disabled Metrics Hidden**: Metrics disabled in the configuration are not listed
+- **Process Metrics**: The PROCESS tab shows each process as a card of its fields (not drawn on the graph)
+- **Formatted Timestamp**: Human-readable date/time
+- **Scrollable List**: Handles large numbers of metrics
 
 ### Loading & Error States
 - **Loading Spinner**: Shows animated spinner while fetching data
@@ -75,11 +89,7 @@ npm run preview
 
 ## API Integration
 
-The UI connects to the FastAPI backend through these endpoints:
-
-- `GET /api/metrics/range` - Fetch metrics within a datetime range
-- `GET /api/metrics/config` - Retrieve metric configurations
-- `POST /api/metrics/config` - Save metric configurations
+See the endpoint list below.
 
 ## Components Structure
 
@@ -93,14 +103,13 @@ src/
 │   │   ├── checkbox.tsx
 │   │   ├── input.tsx
 │   │   ├── label.tsx
-│   │   ├── separator.tsx
-│   │   └── [more radix components]
-│   ├── TimeRangePicker.tsx      # Date/time range selection with present checkbox
-│   ├── MetricsGraph.tsx         # D3.js interactive line graph visualization
-│   ├── ConfigurationSection.tsx # Metric enable/disable, color, order configuration
-│   └── MetricPopup.tsx          # Detailed metric values popup at selected timestamp
+│   │   └── separator.tsx
+│   ├── TimeRangePicker.tsx      # Date/time range, present mode, preset durations, reset
+│   ├── MetricsGraph.tsx         # D3.js line graph with series selector and drag-to-zoom
+│   ├── ConfigurationSection.tsx # Metric enable/disable, color, order, filter, sort
+│   └── MetricPopup.tsx          # Metric values popup at selected timestamp
 ├── hooks/
-│   └── useMetricsAPI.ts         # API client hook with axios (metrics, metadata, configs)
+│   └── useMetricsAPI.ts         # API client hook with axios (metrics, metadata, configs), unit conversion
 ├── lib/
 │   └── utils.ts                 # Utility functions (cn helper for Tailwind classes)
 ├── App.tsx                      # Main application component orchestrating all features
@@ -111,22 +120,22 @@ src/
 
 The UI connects to the FastAPI backend through these endpoints:
 
-- `GET /api/metrics/range` - Fetch metrics within a datetime range (returns batches of metric data)
-- `GET /api/metrics/metadata` - Retrieve all metric metadata (name, type, alias, description, thresholds)
+- `GET /api/metrics/range` - Fetch metrics within a datetime range (`start_datetime`, `end_datetime`, `bucket_count`); returns batches without metadata
+- `GET /api/metrics/metadata` - Retrieve all metric metadata (raw `name`, type, unit, alias, description, component type, thresholds); joined with range data on the frontend by `name`
 - `GET /api/metrics/config` - Retrieve saved metric configurations
 - `POST /api/metrics/config` - Save/update metric configurations
 
 ## Technology Stack
 
-- **React 19** - UI framework with hooks-based architecture
-- **TypeScript** - Type-safe development
-- **Vite 8** - Fast build tool and dev server
+- **React 19** - UI framework
+- **TypeScript 6** - Type-safe development
+- **Vite 8** - Build tool and dev server
 - **Tailwind CSS 4** - Utility-first CSS framework
-- **shadcn/ui** - Reusable component library built on Radix UI primitives
-- **D3.js 7** - Data visualization for interactive graphs
-- **Axios** - HTTP client for API requests
-- **date-fns** - Date manipulation and formatting
-- **Lucide React** - Beautiful, consistent icon library
+- **shadcn/ui** - Component primitives built on Radix UI
+- **D3.js 7** - Graph rendering
+- **Axios** - HTTP client
+- **date-fns** - Date formatting
+- **Lucide React** - Icons
 
 ## Development Workflow
 
@@ -141,7 +150,9 @@ npm run dev
 
 The application will be available at `http://localhost:5173`.
 
-The dev server automatically proxies API calls to the FastAPI backend at port 5000.
+The dev server proxies `/api` (and `/websocket`) to the FastAPI backend at port 5000.
+
+Lint with `npm run lint`.
 
 ### Build for Production
 
@@ -161,8 +172,8 @@ Preview the production build locally before deploying.
 
 ## Configuration Files
 
-- `metric_config.json` - Stored in the `metadata/` folder, contains user-saved metric configurations
-- `metric_metadata.json` - Contains all available metrics with their metadata
+- `metric_config.json` - Stored in the project root, contains user-saved metric configurations
+- `metadata/metric_metadata.json` - Contains all available metrics with their metadata
 
 ## Styling
 
@@ -178,11 +189,10 @@ The UI uses Tailwind CSS with custom shadcn/ui theming. Colors are defined in `s
 
 ## Notes
 
-- Process metrics (those with "count" or "total_bytes" in name) are excluded from graphs and configuration
-- All metric values are formatted appropriately for display
-- The UI automatically handles loading states and errors
-- Graph resizes responsively to container width
-- If no metric configurations exist yet, all metrics fetched from `/metrics/metadata` are enabled by default
+- Metrics with component type PROCESS are excluded from graphs (shown only in the popup); metrics with "count" or "total_bytes" in the name are hidden from the configuration list
+- GPU metrics named `cardN_*` are split into per-card component types (e.g. `GPU 0`)
+- Configs and series are keyed by raw metric name; the alias is display-only
+- If no metric configurations exist yet, all metrics fetched from `/metrics/metadata` are enabled by default with preset colors
 
 ```js
 export default defineConfig([
