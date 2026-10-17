@@ -7,7 +7,7 @@ import { Checkbox } from './ui/checkbox'
 import { DEFAULT_PRESET_HOURS, formatISOWithTZ } from '../lib/utils'
 
 interface TimeRangePickerProps {
-    readonly onTimeRangeChange: (start: string, end: string) => void
+    readonly onTimeRangeChange: (start: string, end: string, relativeHours?: number | null) => void
     readonly extra?: React.ReactNode
     // Range chosen on the graph; id changes on every new selection
     readonly externalRange?: { start: number; end: number; id: number } | null
@@ -78,7 +78,8 @@ export function TimeRangePicker({ onTimeRangeChange, extra, externalRange, onRes
 
             onChangeRef.current(
                 toISOWithOffset(startDateObj, startTime),
-                toISOWithOffset(endDateObj, endTime)
+                toISOWithOffset(endDateObj, endTime),
+                hours
             )
         } else {
             const combinedStart = startDateTime.date && startDateTime.time ? toISOWithOffset(startDateTime.date, startDateTime.time) : startDate
@@ -103,7 +104,7 @@ export function TimeRangePicker({ onTimeRangeChange, extra, externalRange, onRes
         setIsPresentSelected(true)
         setPresetDuration(DEFAULT_PRESET)
         onReset?.()
-        onTimeRangeChange(toISOWithOffset(startDateObj, startTime), toISOWithOffset(endDateObj, endTime))
+        onTimeRangeChange(toISOWithOffset(startDateObj, startTime), toISOWithOffset(endDateObj, endTime), DEFAULT_PRESET_HOURS)
     }
 
     const handleStartDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {

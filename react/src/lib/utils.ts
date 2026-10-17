@@ -7,6 +7,7 @@ export function cn(...inputs: ClassValue[]) {
 export const DEFAULT_PRESET_HOURS = 3
 export const API_BASE_URL = '/api'
 export const DEFAULT_BUCKET_COUNT = 100
+export const DEFAULT_REFRESH_INTERVAL = 30
 export const PROCESS_TYPE = 'PROCESS'
 export const OTHER_TYPE = 'OTHER'
 

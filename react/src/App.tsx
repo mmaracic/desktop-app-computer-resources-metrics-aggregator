@@ -1,11 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useMetricsAPI, type MetricData, type MetricConfig } from './hooks/useMetricsAPI'
 import { TimeRangePicker } from './components/TimeRangePicker'
 import { MetricsGraph } from './components/MetricsGraph'
 import { ConfigurationSection } from './components/ConfigurationSection'
 import { MetricPopup } from './components/MetricPopup'
 import { Card } from './components/ui/card'
-import { API_BASE_URL, DEFAULT_BUCKET_COUNT, DEFAULT_PRESET_HOURS, OTHER_TYPE, PROCESS_TYPE, formatISOWithTZ } from './lib/utils'
+import { Checkbox } from './components/ui/checkbox'
+import { Label } from './components/ui/label'
+import { API_BASE_URL, DEFAULT_BUCKET_COUNT, DEFAULT_PRESET_HOURS, DEFAULT_REFRESH_INTERVAL, OTHER_TYPE, PROCESS_TYPE, formatISOWithTZ } from './lib/utils'
 
 function App() {
   const { getMetricsByRange, getMetricMetadata, getMetricConfigs, saveMetricConfigs, joinMetadataWithMetrics } = useMetricsAPI()
@@ -51,22 +53,31 @@ function App() {
   // Time range state
   const [currentStartDate, setCurrentStartDate] = useState<string>('')
   const [currentEndDate, setCurrentEndDate] = useState<string>('')
+  const [relativeHours, setRelativeHours] = useState<number | null>(null)
   const [bucketCount, setBucketCount] = useState<number>(DEFAULT_BUCKET_COUNT)
+  const [refreshInterval, setRefreshInterval] = useState<number>(DEFAULT_REFRESH_INTERVAL)
+  const [autoRefresh, setAutoRefresh] = useState<boolean>(true)
   const [graphSelection, setGraphSelection] = useState<{ start: number; end: number; id: number } | null>(null)
 
-  const now = new Date()
-  const defaultStart = new Date(now.getTime() - DEFAULT_PRESET_HOURS * 60 * 60 * 1000)
-
-  // Fetch all data on mount or when time range changes
+  // Fetch all data on mount or when time range changes, then refresh at the selected interval
+  const hasLoadedRef = useRef(false)
   useEffect(() => {
+    let intervalId: number | undefined
+
     const fetchData = async () => {
       try {
-        setIsLoading(true)
+        if (!hasLoadedRef.current) {
+          setIsLoading(true)
+        }
         setError(null)
 
         // Use current time range if set, otherwise default to last DEFAULT_PRESET_HOURS hours
-        const startDatetime = currentStartDate || formatISOWithTZ(defaultStart)
-        const endDatetime = currentEndDate || formatISOWithTZ(now)
+        const now = new Date()
+        const defaultStart = new Date(now.getTime() - DEFAULT_PRESET_HOURS * 60 * 60 * 1000)
+        // Preset ranges slide with the clock so refreshes pick up new data
+        const slidingStart = relativeHours ? new Date(now.getTime() - relativeHours * 60 * 60 * 1000) : null
+        const startDatetime = slidingStart ? formatISOWithTZ(slidingStart) : currentStartDate || formatISOWithTZ(defaultStart)
+        const endDatetime = relativeHours ? formatISOWithTZ(now) : currentEndDate || formatISOWithTZ(now)
 
         console.log('📡 Fetching metrics from:', `${API_BASE_URL}/metrics/range`)
         console.log('   Params:', { start_datetime: startDatetime, end_datetime: endDatetime })
@@ -111,11 +122,18 @@ function App() {
         console.error('Stack trace:', err.stack)
       } finally {
         setIsLoading(false)
+        hasLoadedRef.current = true
       }
     }
 
-    fetchData()
-  }, [currentStartDate, currentEndDate, bucketCount])
+    void fetchData()
+    if (autoRefresh) {
+      intervalId = window.setInterval(() => {
+        void fetchData()
+      }, refreshInterval * 1000)
+    }
+    return () => window.clearInterval(intervalId)
+  }, [currentStartDate, currentEndDate, relativeHours, bucketCount, refreshInterval, autoRefresh])
 
   // Fetch configurations on mount
   useEffect(() => {
@@ -285,10 +303,13 @@ function App() {
                 setGraphType('')
                 setSelectorMode('radio')
                 setBucketCount(DEFAULT_BUCKET_COUNT)
+                setRefreshInterval(DEFAULT_REFRESH_INTERVAL)
+                setAutoRefresh(true)
               }}
-              onTimeRangeChange={(start, end) => {
+              onTimeRangeChange={(start, end, hours) => {
                 setCurrentStartDate(start)
                 setCurrentEndDate(end)
+                setRelativeHours(hours ?? null)
               }}
               extra={
                 <div className="flex items-center gap-4 text-xs">
@@ -331,6 +352,27 @@ function App() {
                         <option key={n} value={n}>{n}</option>
                       ))}
                     </select>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <label htmlFor="refresh-interval">Refresh</label>
+                    <select
+                      id="refresh-interval"
+                      value={refreshInterval}
+                      onChange={(e) => setRefreshInterval(Number(e.target.value))}
+                      className="h-8 rounded-md border bg-background text-foreground px-2"
+                    >
+                      {[15, 30, 60].map((n) => (
+                        <option key={n} value={n}>{n}s</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Checkbox
+                      id="auto-refresh"
+                      checked={autoRefresh}
+                      onCheckedChange={(checked) => setAutoRefresh(checked === true)}
+                    />
+                    <Label htmlFor="auto-refresh">Auto refresh</Label>
                   </div>
                 </div>
               }
